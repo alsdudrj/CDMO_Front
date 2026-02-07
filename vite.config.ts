@@ -10,4 +10,7 @@ export default defineConfig({
       react:path.resolve('./node_modules/react'),
     },
   },
+  define: {
+    global: 'window'
+  }
 });

@@ -14,6 +14,7 @@ import KpiManagement from './sub/KpiManagement';
 import SystemManagement from './sub/SystemManagement';
 import StandardManagement from './sub/StandardManagement';
 import SearchPage from './sub/SearchPage';
+import TestPage from './sub/TestPage';
 
 const App = () => {
   return (
@@ -36,6 +37,9 @@ const App = () => {
             <Route path="/member" element={<Member/>}/>
             <Route path="/reset" element={<Reset/>}/>
             <Route path="/search" element={<SearchPage />} />
+
+            {/*테스트 페이지*/}
+            <Route path="/test" element={<TestPage/>}/>
         </Routes>
     </BrowserRouter>
     </>
