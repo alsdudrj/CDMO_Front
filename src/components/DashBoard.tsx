@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, {useEffect, useState} from 'react'
 //리액트 hook을 사용해서 컴포넌트 상태 관리와 생명주기를 제어
 

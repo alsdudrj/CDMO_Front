@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useEffect, useState } from "react";

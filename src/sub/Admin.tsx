@@ -1,422 +1,252 @@
 import React from "react";
 import Lnb from "../include/Lnb";
 import Top from "../include/Top";
+import { Row, Col, Button, Table, ProgressBar } from "react-bootstrap";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import {
+  DashboardContainer,
+  SectionTitle,
+  MetricCard,
+  DashboardCard,
+  StatusCard,
+  AlertBox,
+  ChartWrapper,
+  DonutLabel,
+  ProgressLabel,
+  Badge
+} from "../styled/Dashboard.styles";
 
+// Mock Data
+const metrics = [
+  { title: "ACTIVE BATCHES (MONTHLY)", value: "12", icon: "fa-clipboard-list", color: "#4e73df" },
+  { title: "OVERALL YIELD (ANNUAL)", value: "94.2%", icon: "fa-tint", color: "#1cc88a" },
+  { title: "SCHEDULED TASKS", value: "50%", icon: "fa-check-square", color: "#36b9cc" },
+  { title: "PENDING DEVIATIONS", value: "18", icon: "fa-exclamation-triangle", color: "#f6c23e" },
+];
 
-// 🔹 ProgressBar 인터페이스 정의
-interface ProgressBarProps {
-  value: number;
-  min?: number;
-  max?: number;
-  color?: "primary" | "success" | "danger" | "warning" | "info";
-}
+const batchProgress = [
+  { name: "Monoclonal Antibody A (mAb-A)", batch: "BAT-2024-101", stage: "Cell Culture (Bioreactor)", progress: 65, eta: "4h 15m", color: "primary" },
+  { name: "Recombinant Protein B", batch: "BAT-2024-104", stage: "Purification (Chromatography)", progress: 30, eta: "12h 00m", color: "info" },
+  { name: "Vaccine Adjuvant C", batch: "BAT-2024-108", stage: "Fill & Finish", progress: 88, eta: "1h 10m", color: "success" },
+];
 
-// 🔹 ProgressBar 컴포넌트
-const ProgressBar: React.FC<ProgressBarProps> = ({
-  value,
-  min = 0,
-  max = 100,
-  color = "primary",
-}) => {
-  return (
-    <div className="progress mb-4">
-      <div
-        className={`progress-bar bg-${color}`}
-        style={{ width: `${value}%` }}
-        role="progressbar"
-        aria-valuenow={value}
-        aria-valuemin={min}
-        aria-valuemax={max}
-      ></div>
-    </div>
-  );
-};
+const deviationData = [
+  { name: 'Critical', value: 3, color: '#e74a3b' },
+  { name: 'Major', value: 5, color: '#fd7e14' },
+  { name: 'Minor', value: 12, color: '#f6c23e' },
+];
 
-//🔹 App 컴포넌트
+const signatures = [
+  { batch: "BAT-2024-089", desc: "mAb-A Production", type: "MFR Review", waitTime: "4h 30m", typeColor: "#e0f2fe", typeTextColor: "#4e73df", waitTimeColor: "#e74a3b" },
+  { batch: "BAT-2024-092", desc: "Buffer Prep", type: "QA Release", waitTime: "1h 15m", typeColor: "#e0f2fe", typeTextColor: "#4e73df", waitTimeColor: "#f6c23e" },
+  { batch: "EQP-BIO-004", desc: "Bioreactor Log", type: "Equip Log", waitTime: "20m", typeColor: "#f3f4f6", typeTextColor: "#5a5c69", waitTimeColor: "#1cc88a" },
+];
+
 const Admin: React.FC = () => {
   return (
-    <>
-       {/*  Page Wrapper */}
     <div id="wrapper">
-
-      <Lnb/>
-
-        {/*  Content Wrapper */}
-        <div id="content-wrapper" className="d-flex flex-column">
-
-            {/*  Main Content */}
-            <div id="content">
-
-                <Top/>
-
-                {/*  Begin Page Content */}
-                <div className="container-fluid">
-
-                    {/*  Page Heading */}
-                    <div className="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 className="h3 mb-0 text-gray-800">Dashboard</h1>
-                        <a href="#" className="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
-                                className="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
-                    </div>
-
-                    {/*  Content Row */}
-                    <div className="row">
-
-                        {/*  Earnings (Monthly) Card Example */}
-                        <div className="col-xl-3 col-md-6 mb-4">
-                            <div className="card border-left-primary shadow h-100 py-2">
-                                <div className="card-body">
-                                    <div className="row no-gutters align-items-center">
-                                        <div className="col mr-2">
-                                            <div className="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Earnings (Monthly)</div>
-                                            <div className="h5 mb-0 font-weight-bold text-gray-800">$40,000</div>
-                                        </div>
-                                        <div className="col-auto">
-                                            <i className="fas fa-calendar fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/*  Earnings (Monthly) Card Example */}
-                        <div className="col-xl-3 col-md-6 mb-4">
-                            <div className="card border-left-success shadow h-100 py-2">
-                                <div className="card-body">
-                                    <div className="row no-gutters align-items-center">
-                                        <div className="col mr-2">
-                                            <div className="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Earnings (Annual)</div>
-                                            <div className="h5 mb-0 font-weight-bold text-gray-800">$215,000</div>
-                                        </div>
-                                        <div className="col-auto">
-                                            <i className="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/*  Earnings (Monthly) Card Example */}
-                        <div className="col-xl-3 col-md-6 mb-4">
-                            <div className="card border-left-info shadow h-100 py-2">
-                                <div className="card-body">
-                                    <div className="row no-gutters align-items-center">
-                                        <div className="col mr-2">
-                                            <div className="text-xs font-weight-bold text-info text-uppercase mb-1">Tasks
-                                            </div>
-                                            <div className="row no-gutters align-items-center">
-                                                <div className="col-auto">
-                                                    <div className="h5 mb-0 mr-3 font-weight-bold text-gray-800">50%</div>
-                                                </div>
-                                                <div className="col">
-                                                    <div className="progress progress-sm mr-2">
-                                                        <ProgressBar value={60} color="info" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-auto">
-                                            <i className="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/*  Pending Requests Card Example */}
-                        <div className="col-xl-3 col-md-6 mb-4">
-                            <div className="card border-left-warning shadow h-100 py-2">
-                                <div className="card-body">
-                                    <div className="row no-gutters align-items-center">
-                                        <div className="col mr-2">
-                                            <div className="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Pending Requests</div>
-                                            <div className="h5 mb-0 font-weight-bold text-gray-800">18</div>
-                                        </div>
-                                        <div className="col-auto">
-                                            <i className="fas fa-comments fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/*  Content Row */}
-
-                    <div className="row">
-
-                        {/*  Area Chart */}
-                        <div className="col-xl-8 col-lg-7">
-                            <div className="card shadow mb-4">
-                                {/*  Card Header - Dropdown */}
-                                <div
-                                    className="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 className="m-0 font-weight-bold text-primary">Earnings Overview</h6>
-                                    <div className="dropdown no-arrow">
-                                        <a className="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i className="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div className="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                            aria-labelledby="dropdownMenuLink">
-                                            <div className="dropdown-header">Dropdown Header:</div>
-                                            <a className="dropdown-item" href="#">Action</a>
-                                            <a className="dropdown-item" href="#">Another action</a>
-                                            <div className="dropdown-divider"></div>
-                                            <a className="dropdown-item" href="#">Something else here</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/*  Card Body */}
-                                <div className="card-body">
-                                    <div className="chart-area">
-                                        <canvas id="myAreaChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/*  Pie Chart */}
-                        <div className="col-xl-4 col-lg-5">
-                            <div className="card shadow mb-4">
-                                {/*  Card Header - Dropdown */}
-                                <div
-                                    className="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 className="m-0 font-weight-bold text-primary">Revenue Sources</h6>
-                                    <div className="dropdown no-arrow">
-                                        <a className="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i className="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div className="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                            aria-labelledby="dropdownMenuLink">
-                                            <div className="dropdown-header">Dropdown Header:</div>
-                                            <a className="dropdown-item" href="#">Action</a>
-                                            <a className="dropdown-item" href="#">Another action</a>
-                                            <div className="dropdown-divider"></div>
-                                            <a className="dropdown-item" href="#">Something else here</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/*  Card Body */}
-                                <div className="card-body">
-                                    <div className="chart-pie pt-4 pb-2">
-                                        <canvas id="myPieChart"></canvas>
-                                    </div>
-                                    <div className="mt-4 text-center small">
-                                        <span className="mr-2">
-                                            <i className="fas fa-circle text-primary"></i> Direct
-                                        </span>
-                                        <span className="mr-2">
-                                            <i className="fas fa-circle text-success"></i> Social
-                                        </span>
-                                        <span className="mr-2">
-                                            <i className="fas fa-circle text-info"></i> Referral
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/*  Content Row */}
-                    <div className="row">
-
-                        {/*  Content Column */}
-                        <div className="col-lg-6 mb-4">
-
-                            {/*  Project Card Example */}
-                            <div className="card shadow mb-4">
-                                <div className="card-header py-3">
-                                    <h6 className="m-0 font-weight-bold text-primary">Projects</h6>
-                                </div>
-                                <div className="card-body">
-                                    <h4 className="small font-weight-bold">Server Migration <span
-                                            className="float-right">20%</span></h4>
-                                    <div className="progress mb-4">
-                                        <ProgressBar value={60} color="info" />
-                                    </div>
-                                    <h4 className="small font-weight-bold">Sales Tracking <span
-                                            className="float-right">40%</span></h4>
-                                    <div className="progress mb-4">
-                                        <ProgressBar value={60} color="info" />
-                                    </div>
-                                    <h4 className="small font-weight-bold">Customer Database <span
-                                            className="float-right">60%</span></h4>
-                                    <div className="progress mb-4">
-                                       <ProgressBar value={60} color="info" />
-                                    </div>
-                                    <h4 className="small font-weight-bold">Payout Details <span
-                                            className="float-right">80%</span></h4>
-                                    <div className="progress mb-4">
-                                       <ProgressBar value={60} color="info" />
-                                    </div>
-                                    <h4 className="small font-weight-bold">Account Setup <span
-                                            className="float-right">Complete!</span></h4>
-                                    <div className="progress">
-                                       <ProgressBar value={60} color="info" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/*  Color System */}
-                            <div className="row">
-                                <div className="col-lg-6 mb-4">
-                                    <div className="card bg-primary text-white shadow">
-                                        <div className="card-body">
-                                            Primary
-                                            <div className="text-white-50 small">#4e73df</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-lg-6 mb-4">
-                                    <div className="card bg-success text-white shadow">
-                                        <div className="card-body">
-                                            Success
-                                            <div className="text-white-50 small">#1cc88a</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-lg-6 mb-4">
-                                    <div className="card bg-info text-white shadow">
-                                        <div className="card-body">
-                                            Info
-                                            <div className="text-white-50 small">#36b9cc</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-lg-6 mb-4">
-                                    <div className="card bg-warning text-white shadow">
-                                        <div className="card-body">
-                                            Warning
-                                            <div className="text-white-50 small">#f6c23e</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-lg-6 mb-4">
-                                    <div className="card bg-danger text-white shadow">
-                                        <div className="card-body">
-                                            Danger
-                                            <div className="text-white-50 small">#e74a3b</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-lg-6 mb-4">
-                                    <div className="card bg-secondary text-white shadow">
-                                        <div className="card-body">
-                                            Secondary
-                                            <div className="text-white-50 small">#858796</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-lg-6 mb-4">
-                                    <div className="card bg-light text-black shadow">
-                                        <div className="card-body">
-                                            Light
-                                            <div className="text-black-50 small">#f8f9fc</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-lg-6 mb-4">
-                                    <div className="card bg-dark text-white shadow">
-                                        <div className="card-body">
-                                            Dark
-                                            <div className="text-white-50 small">#5a5c69</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div className="col-lg-6 mb-4">
-
-                            {/*  Illustrations */}
-                            <div className="card shadow mb-4">
-                                <div className="card-header py-3">
-                                    <h6 className="m-0 font-weight-bold text-primary">Illustrations</h6>
-                                </div>
-                                <div className="card-body">
-                                    <div className="text-center">
-                                        <img className="img-fluid px-3 px-sm-4 mt-3 mb-4"
-                                            src="img/undraw_posting_photo.svg" alt="..."/>
-                                    </div>
-                                    <p>Add some quality, svg illustrations to your project courtesy of <a
-                                            target="_blank" rel="nofollow" href="https://undraw.co/">unDraw</a>, a
-                                        constantly updated collection of beautiful svg images that you can use
-                                        completely free and without attribution!</p>
-                                    <a target="_blank" rel="nofollow" href="https://undraw.co/">Browse Illustrations on
-                                        unDraw &rarr;</a>
-                                </div>
-                            </div>
-
-                            {/*  Approach */}
-                            <div className="card shadow mb-4">
-                                <div className="card-header py-3">
-                                    <h6 className="m-0 font-weight-bold text-primary">Development Approach</h6>
-                                </div>
-                                <div className="card-body">
-                                    <p>SB Admin 2 makes extensive use of Bootstrap 4 utility classNamees in order to reduce
-                                        CSS bloat and poor page performance. Custom CSS classNamees are used to create
-                                        custom components and custom utility classNamees.</p>
-                                    <p className="mb-0">Before working with this theme, you should become familiar with the
-                                        Bootstrap framework, especially the utility classNamees.</p>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-                {/*  /.container-fluid */}
-
+      <Lnb />
+      <div id="content-wrapper" className="d-flex flex-column">
+        <div id="content">
+          <Top />
+          <DashboardContainer>
+            {/* Header */}
+            <div className="d-sm-flex align-items-center justify-content-between mb-4">
+              <h1 className="h3 mb-0 text-gray-800">Dashboard</h1>
+              <Button variant="primary" size="sm" className="d-none d-sm-inline-block shadow-sm">
+                <i className="fas fa-download fa-sm text-white-50 mr-2"></i> Generate Report
+              </Button>
             </div>
-            {/*  End of Main Content */}
 
-            {/*  Footer */}
-            <footer className="sticky-footer bg-white">
-                <div className="container my-auto">
-                    <div className="copyright text-center my-auto">
-                        <span>Copyright &copy; Your Website 2021</span>
+            {/* Metrics Row */}
+            <Row>
+              {metrics.map((item, index) => (
+                <Col xl={3} md={6} className="mb-4" key={index}>
+                  <MetricCard color={item.color}>
+                    <div className="card-body">
+                      <Row className="no-gutters align-items-center">
+                        <Col className="mr-2">
+                          <div className="text-xs font-weight-bold text-uppercase mb-1" style={{ color: item.color }}>
+                            {item.title}
+                          </div>
+                          <div className="h5 mb-0 font-weight-bold text-gray-800">{item.value}</div>
+                        </Col>
+                        <Col className="col-auto">
+                          <i className={`fas ${item.icon} fa-2x text-gray-300`}></i>
+                        </Col>
+                      </Row>
                     </div>
-                </div>
-            </footer>
-            {/*  End of Footer */}
+                  </MetricCard>
+                </Col>
+              ))}
+            </Row>
 
-        </div>
-        {/*  End of Content Wrapper */}
+            {/* Main Content Row */}
+            <Row>
+              {/* Active Batch Progress */}
+              <Col xl={8} lg={7}>
+                <DashboardCard>
+                  <div className="card-header">
+                    <SectionTitle><i className="fas fa-chart-line mr-2"></i>Active Batch Progress</SectionTitle>
+                    <a href="#" className="small font-weight-bold" style={{textDecoration:'none'}}>View All Batches</a>
+                  </div>
+                  <div className="card-body">
+                    {batchProgress.map((batch, index) => (
+                      <div className="mb-4" key={index}>
+                         <ProgressLabel>
+                             <div>
+                                <div className="title">{batch.name}</div>
+                                <Badge bg="#f8f9fc" style={{color: '#858796', border: '1px solid #e3e6f0'}}>{batch.batch}</Badge>
+                             </div>
+                             <div className="meta">
+                                 <div>{batch.stage}</div>
+                                 {batch.eta && <div>ETA: <span style={{backgroundColor: '#4e73df', color: 'white', padding: '0 4px', borderRadius: '4px'}}>{batch.eta}</span></div>}
+                             </div>
+                         </ProgressLabel>
+                         <ProgressBar now={batch.progress} variant={batch.color} style={{height: '0.5rem'}} />
+                         <div className="text-right mt-1 small font-weight-bold" style={{color: batch.color === 'primary' ? '#4e73df' : batch.color === 'info' ? '#36b9cc' : '#1cc88a'}}>{batch.progress}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </DashboardCard>
+              </Col>
 
-    </div>
-    {/*  End of Page Wrapper */}
+              {/* Deviation Status */}
+              <Col xl={4} lg={5}>
+                <DashboardCard>
+                  <div className="card-header">
+                      <SectionTitle><i className="fas fa-exclamation-circle mr-2"></i>Deviation Status</SectionTitle>
+                      <span className="small text-muted">REAL-TIME</span>
+                  </div>
+                  <div className="card-body">
+                    <ChartWrapper>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={deviationData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            paddingAngle={5}
+                            dataKey="value"
+                            startAngle={90}
+                            endAngle={-270}
+                          >
+                            {deviationData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <DonutLabel>
+                          <div className="value">20</div>
+                          <div className="label">OPEN</div>
+                      </DonutLabel>
+                    </ChartWrapper>
+                    <div className="mt-4">
+                        {deviationData.map((item, index) => (
+                            <div className="d-flex justify-content-between align-items-center mb-2 small" key={index}>
+                                <span><i className="fas fa-circle mr-2" style={{color: item.color}}></i>{item.name}</span>
+                                <span className="font-weight-bold">{item.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                  </div>
+                </DashboardCard>
+              </Col>
+            </Row>
 
-    {/*  Scroll to Top Button*/}
-    <a className="scroll-to-top rounded" href="#page-top">
-        <i className="fas fa-angle-up"></i>
-    </a>
+            {/* Bottom Content Row */}
+            <Row>
+              {/* Pending Signatures */}
+              <Col xl={8} lg={7}>
+                 <DashboardCard>
+                    <div className="card-header">
+                        <SectionTitle>Pending Signatures</SectionTitle>
+                    </div>
+                    <div className="card-body p-0">
+                        <Table hover responsive className="mb-0">
+                            <thead className="bg-light">
+                                <tr>
+                                    <th className="border-0 small font-weight-bold text-muted text-uppercase">BATCH / DOC</th>
+                                    <th className="border-0 small font-weight-bold text-muted text-uppercase">TYPE</th>
+                                    <th className="border-0 small font-weight-bold text-muted text-uppercase">WAIT TIME</th>
+                                    <th className="border-0 small font-weight-bold text-muted text-uppercase text-right">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {signatures.map((sig, index) => (
+                                    <tr key={index}>
+                                        <td className="align-middle">
+                                            <div className="font-weight-bold text-dark">{sig.batch}</div>
+                                            <div className="small text-muted">{sig.desc}</div>
+                                        </td>
+                                        <td className="align-middle">
+                                            <Badge bg={sig.typeColor} style={{color: sig.typeTextColor}}>{sig.type}</Badge>
+                                        </td>
+                                        <td className="align-middle font-weight-bold" style={{color: sig.waitTimeColor}}>
+                                            {sig.waitTime}
+                                        </td>
+                                        <td className="align-middle text-right">
+                                            <Button variant="outline-primary" size="sm">Review</Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    </div>
+                 </DashboardCard>
+              </Col>
 
-    {/*  Logout Modal*/}
-    <div className="modal fade" id="logoutModal" tabIndex={-1} role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div className="modal-dialog" role="document">
-            <div className="modal-content">
-                <div className="modal-header">
-                    <h5 className="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button className="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div className="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div className="modal-footer">
-                    <button className="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a className="btn btn-primary" href="/">Logout</a>
-                </div>
+              {/* System Alerts & Status Cards */}
+              <Col xl={4} lg={5}>
+                 <div className="mb-4">
+                     <SectionTitle className="mb-3">System Alerts</SectionTitle>
+                     <AlertBox>
+                         <p>You have 2 critical maintenance alerts pending for Bioreactor B-02.</p>
+                         <a href="#">View Maintenance Schedule →</a>
+                     </AlertBox>
+                 </div>
+
+                 <Row>
+                     <Col md={6}>
+                         <StatusCard bg="#4e73df">
+                             <h6>Material Status</h6>
+                             <div className="value">Normal</div>
+                         </StatusCard>
+                     </Col>
+                     <Col md={6}>
+                         <StatusCard bg="#1cc88a">
+                             <h6>System Uptime</h6>
+                             <div className="value">99.9%</div>
+                         </StatusCard>
+                     </Col>
+                     <Col md={6}>
+                         <StatusCard bg="#36b9cc">
+                             <h6>Network</h6>
+                             <div className="value">Secure</div>
+                         </StatusCard>
+                     </Col>
+                     <Col md={6}>
+                         <StatusCard bg="#f6c23e">
+                             <h6>Audit Trail</h6>
+                             <div className="value">Active</div>
+                         </StatusCard>
+                     </Col>
+                 </Row>
+              </Col>
+            </Row>
+
+            <div className="text-center text-muted small my-4">
+                Copyright &copy; BioTrak MES 2024
             </div>
+
+          </DashboardContainer>
         </div>
+      </div>
     </div>
- </>
   );
 };
 

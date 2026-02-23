@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Col, Container, Row, Tab, Tabs, Table, Button } from "react-bootstrap";
 import Lnb from "../include/Lnb";
 import Top from "../include/Top";

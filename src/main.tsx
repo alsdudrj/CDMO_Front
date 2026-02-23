@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import "./assets/scss/style.scss";
 import "./assets/css/mes.scss";
+import "./styles/global.scss";
 //부트스트랩의 기본 베이스 cdn
 //리액트 1:1 경로는 ./
 //타입스크립트 사용시 자바스크립트를 제외하고는 ;을 붙여줘야함

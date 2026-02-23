@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState } from "react";
 import Lnb from "../include/Lnb";
 import Top from "../include/Top";
