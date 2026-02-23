@@ -44,7 +44,7 @@ const Login = () => {
       alert("로그인 성공");
 
       //  2) window.location.href 말고 SPA 라우팅으로 이동
-      navigate("/admin", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
       alert("로그인 실패! 이메일 또는 비밀번호를 확인해 주세요");

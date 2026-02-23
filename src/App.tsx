@@ -16,14 +16,17 @@ import StandardManagement from './sub/StandardManagement';
 import SearchPage from './sub/SearchPage';
 import TestPage from './sub/TestPage';
 import MESDashboard from './components/dashboard/MESDashboard';
+import TempData from './sub/TempData';
+import DoData from './sub/DoData';
+import PhData from './sub/PhData';
 
 const App = () => {
   return (
     <>
     <BrowserRouter>
         <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace/>}/>
-            <Route path="/dashboard" element={<MESDashboard />} />
+            <Route path="/" element={<Navigate to="/login" replace/>}/>
+            <Route path="/dashboard" element={<MESDashboard/>} />
             <Route path="/login" element={<Login/>}/>
             <Route path="/admin" element={<ProtectedRoute><Admin/></ProtectedRoute>}/>
 
@@ -42,6 +45,9 @@ const App = () => {
 
             {/*테스트 페이지*/}
             <Route path="/test" element={<TestPage/>}/>
+            <Route path="/test2" element={<TempData/>}/>
+            <Route path="/test3" element={<DoData/>}/>
+            <Route path="/test4" element={<PhData/>}/>
         </Routes>
     </BrowserRouter>
     </>
