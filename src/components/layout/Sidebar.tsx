@@ -106,6 +106,10 @@ const Sidebar = () => {
             <IconWrapper><FontAwesomeIcon icon={faFileAlt} /></IconWrapper>
             Reports & Analytics
           </NavLink>
+          <NavLink to="/process" $active={path.startsWith('/reports')}>
+            <IconWrapper><FontAwesomeIcon icon={faFileAlt} /></IconWrapper>
+            Process Progress (Real-Time)
+          </NavLink>
         </Nav>
       </SidebarContainer>
     </div>

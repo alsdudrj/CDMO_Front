@@ -19,6 +19,7 @@ import MESDashboard from './components/dashboard/MESDashboard';
 import TempData from './sub/TempData';
 import DoData from './sub/DoData';
 import PhData from './sub/PhData';
+import ProcessRealTime from './components/process_progress/ProcessRealTime';
 
 const App = () => {
   return (
@@ -26,9 +27,12 @@ const App = () => {
     <BrowserRouter>
         <Routes>
             <Route path="/" element={<Navigate to="/login" replace/>}/>
-            <Route path="/dashboard" element={<MESDashboard/>} />
             <Route path="/login" element={<Login/>}/>
-            <Route path="/admin" element={<ProtectedRoute><Admin/></ProtectedRoute>}/>
+            <Route path="/admin" element={<Admin/>}/>
+
+            {/*포트폴리오 추가*/}
+            <Route path="/dashboard" element={<MESDashboard/>} />
+            <Route path="/process" element={<ProcessRealTime/>} />
 
             <Route path="/sales" element={<ProtectedRoute><SalesManagement/></ProtectedRoute>}/>
             <Route path="/pmanagement" element={<ProtectedRoute><ProductionManagement/></ProtectedRoute>}/>
