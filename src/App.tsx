@@ -33,7 +33,7 @@ const App = () => {
 
             {/*포트폴리오 추가*/}
             <Route path="/dashboard" element={<MESDashboard/>} />
-            <Route path="/recipes" element={<RecipeManagement />} />
+            <Route path="/recipe" element={<RecipeManagement />} />
             <Route path="/process" element={<ProcessRealTime/>} />
 
             <Route path="/sales" element={<ProtectedRoute><SalesManagement/></ProtectedRoute>}/>
