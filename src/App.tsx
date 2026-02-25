@@ -20,6 +20,7 @@ import TempData from './sub/TempData';
 import DoData from './sub/DoData';
 import PhData from './sub/PhData';
 import ProcessRealTime from './components/process_progress/ProcessRealTime';
+import RecipeManagement from './components/process_recipe/RecipeManagement';
 
 const App = () => {
   return (
@@ -32,6 +33,7 @@ const App = () => {
 
             {/*포트폴리오 추가*/}
             <Route path="/dashboard" element={<MESDashboard/>} />
+            <Route path="/recipes" element={<RecipeManagement />} />
             <Route path="/process" element={<ProcessRealTime/>} />
 
             <Route path="/sales" element={<ProtectedRoute><SalesManagement/></ProtectedRoute>}/>

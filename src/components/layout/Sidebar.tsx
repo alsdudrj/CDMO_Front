@@ -84,7 +84,11 @@ const Sidebar = () => {
           <NavLink to="/dashboard" $active={path === '/dashboard'}>
             <IconWrapper><FontAwesomeIcon icon={faChartLine} /></IconWrapper>
             Dashboard
-          </NavLink>
+          </NavLink>        
+          <NavLink to="/recipe" $active={path === '/recipe'}>
+            <IconWrapper><FontAwesomeIcon icon={faChartLine} /></IconWrapper>
+            Process Recipes
+          </NavLink>          
           <NavLink to="/batch" $active={path.startsWith('/batch')}>
             <IconWrapper><FontAwesomeIcon icon={faVial} /></IconWrapper>
             Batch Management
