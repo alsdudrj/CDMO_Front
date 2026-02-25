@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
-import { getCompanies, getProjects, getProducts, getRecipes, createRecipe, updateRecipe, deleteRecipe } from '../api/recipeApi';
-import type { Company, Project, Product, RecipeDto, ProcessDto } from '../api/recipeApi';
+import { getCompanies, getProjects, getProducts, getRecipes, createRecipe, updateRecipe, deleteRecipe } from '../../api/recipeApi';
+import type { Company, Project, Product, RecipeDto, ProcessDto } from '../../api/recipeApi';
 
 const RecipeManagement: React.FC = () => {
     // State

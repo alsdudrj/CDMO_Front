@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api'; [cite_start]// [cite: 95]
+const API_BASE_URL = 'http://localhost:8080/api';
 
-// Types
 export interface ProcessDto {
     id?: number;
     name: string;
@@ -43,37 +42,36 @@ export interface Product {
     project: Project;
 }
 
-// API Functions
-export const getCompanies = async (): Promise<Company[]> => {
-    const response = await axios.get(`${API_BASE_URL}/companies`); [cite_start]// [cite: 105]
-    return response.data;
-};
-
-export const getProjects = async (companyId: number): Promise<Project[]> => {
-    const response = await axios.get(`${API_BASE_URL}/companies/${companyId}/projects`); [cite_start]// [cite: 106]
-    return response.data;
-};
-
-export const getProducts = async (projectId: number): Promise<Product[]> => {
-    const response = await axios.get(`${API_BASE_URL}/projects/${projectId}/products`); [cite_start]// [cite: 107]
-    return response.data;
-};
-
 export const getRecipes = async (productId: number): Promise<RecipeDto[]> => {
-    const response = await axios.get(`${API_BASE_URL}/recipes`, { params: { productId } }); [cite_start]// [cite: 101]
+    const response = await axios.get(`${API_BASE_URL}/recipes`, { params: { productId } });
     return response.data;
 };
 
 export const createRecipe = async (recipe: RecipeDto): Promise<RecipeDto> => {
-    const response = await axios.post(`${API_BASE_URL}/recipes`, recipe); [cite_start]// [cite: 102]
+    const response = await axios.post(`${API_BASE_URL}/recipes`, recipe);
     return response.data;
 };
 
 export const updateRecipe = async (id: number, recipe: RecipeDto): Promise<RecipeDto> => {
-    const response = await axios.put(`${API_BASE_URL}/recipes/${id}`, recipe); [cite_start]// [cite: 103]
+    const response = await axios.put(`${API_BASE_URL}/recipes/${id}`, recipe);
     return response.data;
 };
 
 export const deleteRecipe = async (id: number): Promise<void> => {
-    await axios.delete(`${API_BASE_URL}/recipes/${id}`); [cite_start]// [cite: 104]
+    await axios.delete(`${API_BASE_URL}/recipes/${id}`);
+};
+
+export const getCompanies = async (): Promise<Company[]> => {
+    const response = await axios.get(`${API_BASE_URL}/companies`);
+    return response.data;
+};
+
+export const getProjects = async (companyId: number): Promise<Project[]> => {
+    const response = await axios.get(`${API_BASE_URL}/companies/${companyId}/projects`);
+    return response.data;
+};
+
+export const getProducts = async (projectId: number): Promise<Product[]> => {
+    const response = await axios.get(`${API_BASE_URL}/projects/${projectId}/products`);
+    return response.data;
 };
