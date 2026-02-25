@@ -45,27 +45,59 @@ const LiveIndicator = styled.span`
 
 // --- 메인 컴포넌트 ---
 const ProcessRealTime: React.FC = () => {
-  const [recipes] = useState([
-    { id: 1, name: 'Cell Culture A' },
-    { id: 2, name: 'Purification B' },
-    { id: 3, name: 'Fermentation C' }
-  ]);
-  const [selectedId, setSelectedId] = useState<number>(1);
-  
-  // 데이터 구조를 temp, ph, doValue를 포함하도록 변경
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null);
+  const [simulationId, setSimulationId] = useState<number | null>(null);
   const [realTimeData, setRealTimeData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false); // 초기값 false로 변경 (선택 전엔 로딩 불필요)
   const clientRef = useRef<Client | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true); // 로딩 상태 추가
-
+  // 1. 초기 레시피 로드
   useEffect(() => {
-    const fetchInitialData = async () => {
-      setIsLoading(true); // 로딩 시작
+    fetch("http://localhost:9500/api/recipes")
+      .then(res => res.json())
+      .then(setRecipes)
+      .catch(err => console.error("레시피 로드 실패:", err));
+  }, []);
+
+  // 2. 레시피 선택 시 Simulation ID 조회
+  useEffect(() => {
+    if (!selectedRecipeId) return;
+    
+    console.log("레시피 선택됨 ID:", selectedRecipeId);
+    setIsLoading(true); // 로딩 시작
+
+    fetch(`http://localhost:9500/api/simulation/by-recipe/${selectedRecipeId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("시뮬레이션 정보가 없습니다.");
+        return res.json();
+      })
+      .then(sim => {
+        console.log("조회된 시뮬레이션 ID:", sim.id);
+        setSimulationId(sim.id);
+      })
+      .catch(err => {
+        console.error("Simulation 조회 실패:", err);
+        setIsLoading(false); // 에러 시 로딩 해제
+        alert("해당 레시피에 진행 중인 시뮬레이션이 없습니다.");
+      });
+  }, [selectedRecipeId]);
+
+  // 3. Simulation ID 결정 후 데이터 및 웹소켓 처리
+  useEffect(() => {
+    if (!simulationId) return;
+
+    const initSession = async () => {
       try {
-        const response = await fetch(`http://localhost:9500/api/simulation/${selectedId}/logs`);
-        const logs = await response.json();
+        console.log(`세션 초기화 시작 (ID: ${simulationId})`);
         
-        // 데이터 변환 (백엔드 필드명에 주의: tempPh, phValue 등)
+        // 데이터 로드
+        const response = await fetch(`http://localhost:9500/api/simulation/${simulationId}/logs`);
+        if (!response.ok) throw new Error("로그 데이터 응답 에러");
+        
+        const logs = await response.json();
+        console.log("초기 로그 수신 완료:", logs.length);
+
         const formattedLogs = logs.map((log: any) => ({
           time: new Date(log.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
           temp: log.tempPh,
@@ -73,60 +105,54 @@ const ProcessRealTime: React.FC = () => {
           do: log.doValue,
           progress: log.progressRate
         }));
-        
         setRealTimeData(formattedLogs);
-      } catch (error) {
-        console.error("초기 데이터 로드 실패:", error);
-      } finally {
-        setIsLoading(false); // 로딩 완료
-      }
-    };
 
-  fetchInitialData().then(() => {
-    // 그 다음 웹소켓 연결
-    const client = new Client({
-      brokerURL: 'ws://localhost:9500/ws-cdms',
-      webSocketFactory: () => new SockJS('http://localhost:9500/ws-cdms'),
-      reconnectDelay: 5000,
-      onConnect: (frame) => {
-        console.log(`STOMP Connected to Recipe #${selectedId}`, frame);
-
+        // 웹소켓 연결
         const handleIncomingData = (type: string, body: string) => {
           const value = parseFloat(body);
           const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
           setRealTimeData((prev) => {
             const lastData = prev.length > 0 ? prev[prev.length - 1] : null;
-
             if (lastData && lastData.time === now) {
-              const updatedItem = { ...lastData, [type]: value };
-              return [...prev.slice(0, -1), updatedItem];
-            } 
-
+              return [...prev.slice(0, -1), { ...lastData, [type]: value }];
+            }
             const baseData = lastData ? { ...lastData } : { temp: 0, ph: 7.0, do: 80, progress: 0 };
-            const newItem = { ...baseData, time: now, [type]: value };
-            
-            return [...prev, newItem].slice(-30);
+            return [...prev, { ...baseData, time: now, [type]: value }].slice(-30);
           });
         };
 
-        client.subscribe(`/topic/temperature/${selectedId}`, (msg) => handleIncomingData('temp', msg.body));
-        client.subscribe(`/topic/ph/${selectedId}`, (msg) => handleIncomingData('ph', msg.body));
-        client.subscribe(`/topic/do/${selectedId}`, (msg) => handleIncomingData('do', msg.body));
-        client.subscribe(`/topic/progress/${selectedId}`, (msg) => handleIncomingData('progress', msg.body));
-      },
-    });
+        const client = new Client({
+          brokerURL: 'ws://localhost:9500/ws-cdms',
+          webSocketFactory: () => new SockJS('http://localhost:9500/ws-cdms'),
+          onConnect: () => {
+            console.log("웹소켓 연결 성공!");
+            client.subscribe(`/topic/temperature/${simulationId}`, (msg) => handleIncomingData('temp', msg.body));
+            client.subscribe(`/topic/ph/${simulationId}`, (msg) => handleIncomingData('ph', msg.body));
+            client.subscribe(`/topic/do/${simulationId}`, (msg) => handleIncomingData('do', msg.body));
+            client.subscribe(`/topic/progress/${simulationId}`, (msg) => handleIncomingData('progress', msg.body));
+          },
+        });
 
-    client.activate();
-    clientRef.current = client;
-  });
+        client.activate();
+        clientRef.current = client;
 
-  return () => {
-    if (clientRef.current) {
-      clientRef.current.deactivate();
-    }
-  };
-}, [selectedId]);
+      } catch (error) {
+        console.error("세션 초기화 중 치명적 에러:", error);
+      } finally {
+        console.log("로딩 상태 해제");
+        setIsLoading(false); // 성공하든 실패하든 로딩은 꺼야 함
+      }
+    };
+
+    initSession();
+
+    return () => {
+      if (clientRef.current) {
+        clientRef.current.deactivate();
+        clientRef.current = null;
+      }
+    };
+  }, [simulationId]);
 
   // 최신 데이터 추출
   // const latest = realTimeData[realTimeData.length - 1] || { temp: 0, ph: 0, do: 0 };
@@ -190,7 +216,15 @@ const ProcessRealTime: React.FC = () => {
           </Col>
 
           <Col xl={4}>
-            {/* 레시피 선택 카드 생략 (기존과 동일) */}
+            <Form.Select 
+              value={selectedRecipeId ?? ""} 
+              onChange={e => setSelectedRecipeId(Number(e.target.value))}
+            >
+              <option value="">레시피 선택</option>
+              {recipes.map(r => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </Form.Select>
 
             <MetricCard>
               <Card.Header className="bg-white border-0 py-3">
