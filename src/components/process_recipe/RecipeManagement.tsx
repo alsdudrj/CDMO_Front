@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd'; // 타입 에러 방지를 위한 분리
+import Sidebar from '../layout/Sidebar';
 import { 
     getCompanies, getProjects, getProducts, getRecipes, 
     createRecipe, updateRecipe, deleteRecipe 
@@ -92,110 +93,119 @@ const RecipeManagement: React.FC = () => {
         }
     };
 
-    return (
-        <div className="container-fluid py-4" style={{ backgroundColor: '#4a69d4', minHeight: '100vh' }}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="text-white m-0 fw-bold">Process Recipes</h2>
-                <button className="btn btn-light text-primary shadow-sm fw-bold" disabled={!selectedProduct} onClick={handleCreate}>
-                    <i className="fas fa-plus me-2"></i> Create Recipe
-                </button>
-            </div>
+return (
+        // 1. 전체를 가로로 배치하는 d-flex 컨테이너
+        <div className="d-flex" style={{ backgroundColor: '#4a69d4', minHeight: '100vh' }}>
             
-            {/* Filters Card */}
-            <div className="card shadow-sm border-0 mb-4" style={{ borderRadius: '10px' }}>
-                <div className="card-body">
-                    <div className="row g-3">
-                        <div className="col-md-4">
-                            <label className="form-label text-muted fw-bold small">COMPANY</label>
-                            <select className="form-select" value={selectedCompany || ''} onChange={(e) => {
-                                setSelectedCompany(Number(e.target.value));
-                                setSelectedProject(undefined);
-                                setSelectedProduct(undefined);
-                            }}>
-                                <option value="">Select Company...</option>
-                                {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="col-md-4">
-                            <label className="form-label text-muted fw-bold small">PROJECT</label>
-                            <select className="form-select" value={selectedProject || ''} onChange={(e) => {
-                                setSelectedProject(Number(e.target.value));
-                                setSelectedProduct(undefined);
-                            }} disabled={!selectedCompany}>
-                                <option value="">Select Project...</option>
-                                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="col-md-4">
-                            <label className="form-label text-muted fw-bold small">PRODUCT</label>
-                            <select className="form-select" value={selectedProduct || ''} 
-                                onChange={(e) => setSelectedProduct(Number(e.target.value))} disabled={!selectedProject}>
-                                <option value="">Select Product...</option>
-                                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
+            {/* 2. 좌측 사이드바 렌더링 */}
+            <Sidebar />
+
+            {/* 3. 우측 메인 컨텐츠 영역 (사이드바 너비만큼 왼쪽 여백 밀어내기) */}
+            <div className="container-fluid py-4" style={{ marginLeft: '250px', width: 'calc(100% - 250px)' }}>            
+                
+                {/* 상단 타이틀 및 액션 버튼 */}
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2 className="text-white m-0 fw-bold">Process Recipes</h2>
+                    <button className="btn btn-light text-primary shadow-sm fw-bold" disabled={!selectedProduct} onClick={handleCreate}>
+                        <i className="fas fa-plus me-2"></i> Create Recipe
+                    </button>
+                </div>
+                
+                {/* Filters Card */}
+                <div className="card shadow-sm border-0 mb-4" style={{ borderRadius: '10px' }}>
+                    <div className="card-body">
+                        <div className="row g-3">
+                            <div className="col-md-4">
+                                <label className="form-label text-muted fw-bold small">COMPANY</label>
+                                <select className="form-select" value={selectedCompany || ''} onChange={(e) => {
+                                    setSelectedCompany(Number(e.target.value));
+                                    setSelectedProject(undefined);
+                                    setSelectedProduct(undefined);
+                                }}>
+                                    <option value="">Select Company...</option>
+                                    {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label text-muted fw-bold small">PROJECT</label>
+                                <select className="form-select" value={selectedProject || ''} onChange={(e) => {
+                                    setSelectedProject(Number(e.target.value));
+                                    setSelectedProduct(undefined);
+                                }} disabled={!selectedCompany}>
+                                    <option value="">Select Project...</option>
+                                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label text-muted fw-bold small">PRODUCT</label>
+                                <select className="form-select" value={selectedProduct || ''} 
+                                    onChange={(e) => setSelectedProduct(Number(e.target.value))} disabled={!selectedProject}>
+                                    <option value="">Select Product...</option>
+                                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Recipe List Card */}
-            <div className="card shadow-sm border-0" style={{ borderRadius: '10px' }}>
-                <div className="card-body p-0">
-                    <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0">
-                            <thead className="table-light">
-                                <tr>
-                                    <th className="px-4 py-3 text-muted small fw-bold">NAME</th>
-                                    <th className="py-3 text-muted small fw-bold">VERSION</th>
-                                    <th className="py-3 text-muted small fw-bold">STATUS</th>
-                                    <th className="py-3 text-muted small fw-bold">IS ACTIVE</th>
-                                    <th className="py-3 text-muted small fw-bold">TARGET QTY</th>
-                                    <th className="px-4 py-3 text-end text-muted small fw-bold">ACTIONS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recipes.map(r => (
-                                    <tr key={r.id}>
-                                        <td className="px-4 fw-bold text-dark">{r.name}</td>
-                                        <td><span className="badge bg-light text-dark border">{r.version}</span></td>
-                                        <td>
-                                            <span className={`badge ${r.status === 'APPROVED' ? 'bg-success' : r.status === 'REVIEW' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
-                                                {r.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={`badge ${r.isActive ? 'bg-primary' : 'bg-danger'}`}>
-                                                {r.isActive ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td className="text-muted">{r.targetQuantity} {r.unit}</td>
-                                        <td className="px-4 text-end">
-                                            <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(r)}>Edit</button>
-                                            <button className="btn btn-sm btn-outline-danger" onClick={() => r.id && handleDelete(r.id)}>Delete</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {recipes.length === 0 && (
+                {/* Recipe List Card */}
+                <div className="card shadow-sm border-0" style={{ borderRadius: '10px' }}>
+                    <div className="card-body p-0">
+                        <div className="table-responsive">
+                            <table className="table table-hover align-middle mb-0">
+                                <thead className="table-light">
                                     <tr>
-                                        <td colSpan={6} className="text-center py-5 text-muted">
-                                            {selectedProduct ? "No recipes found for this product. Click 'Create Recipe' to add one." : "Please select a product to view recipes."}
-                                        </td>
+                                        <th className="px-4 py-3 text-muted small fw-bold">NAME</th>
+                                        <th className="py-3 text-muted small fw-bold">VERSION</th>
+                                        <th className="py-3 text-muted small fw-bold">STATUS</th>
+                                        <th className="py-3 text-muted small fw-bold">IS ACTIVE</th>
+                                        <th className="py-3 text-muted small fw-bold">TARGET QTY</th>
+                                        <th className="px-4 py-3 text-end text-muted small fw-bold">ACTIONS</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {recipes.map(r => (
+                                        <tr key={r.id}>
+                                            <td className="px-4 fw-bold text-dark">{r.name}</td>
+                                            <td><span className="badge bg-light text-dark border">{r.version}</span></td>
+                                            <td>
+                                                <span className={`badge ${r.status === 'APPROVED' ? 'bg-success' : r.status === 'REVIEW' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                                                    {r.status}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className={`badge ${r.isActive ? 'bg-primary' : 'bg-danger'}`}>
+                                                    {r.isActive ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="text-muted">{r.targetQuantity} {r.unit}</td>
+                                            <td className="px-4 text-end">
+                                                <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(r)}>Edit</button>
+                                                <button className="btn btn-sm btn-outline-danger" onClick={() => r.id && handleDelete(r.id)}>Delete</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {recipes.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6} className="text-center py-5 text-muted">
+                                                {selectedProduct ? "No recipes found for this product. Click 'Create Recipe' to add one." : "Please select a product to view recipes."}
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Modal Components */}
-            {isModalOpen && currentRecipe && (
-                <RecipeFormModal recipe={currentRecipe} onClose={() => setIsModalOpen(false)} onSave={handleSave} />
-            )}
+                {/* Modal Components */}
+                {isModalOpen && currentRecipe && (
+                    <RecipeFormModal recipe={currentRecipe} onClose={() => setIsModalOpen(false)} onSave={handleSave} />
+                )}
+            </div>
         </div>
     );
 };
-
 // --- Modal Component ---
 interface RecipeFormModalProps {
     recipe: RecipeDto;
