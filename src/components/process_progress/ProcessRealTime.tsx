@@ -62,7 +62,7 @@ const ProcessRealTime: React.FC = () => {
     const fetchInitialData = async () => {
       setIsLoading(true); // 로딩 시작
       try {
-        const response = await fetch(`http://localhost:9500/api/process/${selectedId}/logs`);
+        const response = await fetch(`http://localhost:9500/api/simulation/${selectedId}/logs`);
         const logs = await response.json();
         
         // 데이터 변환 (백엔드 필드명에 주의: tempPh, phValue 등)
