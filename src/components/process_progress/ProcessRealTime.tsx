@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Badge, Form } from 'react-bootstrap';
 import MainLayout from '../layout/MainLayout';
 import styled from 'styled-components';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ComposedChart, Bar, Cell } from 'recharts';
 import { Client, type IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -46,13 +46,15 @@ const LiveIndicator = styled.span`
 // --- 메인 컴포넌트 ---
 const ProcessRealTime: React.FC = () => {
   const [recipes, setRecipes] = useState<any[]>([]);
-  const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null);
-  const [simulationId, setSimulationId] = useState<number | null>(null);
-  const [realTimeData, setRealTimeData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false); // 초기값 false로 변경 (선택 전엔 로딩 불필요)
+  const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null);  //레시피 id 저장
+  const [simulationId, setSimulationId] = useState<number | null>(null);  //시뮬레이션 id 저장
+  const [realTimeData, setRealTimeData] = useState<any[]>([]);  //시뮬레이션 데이터 저장
+  const [isLoading, setIsLoading] = useState(false);  //데이터 로딩 체크
   const clientRef = useRef<Client | null>(null);
 
-  // 1. 초기 레시피 로드
+  const [processStatus, setProcessStatus] = useState<"RUNNING" | "FINISHED">("RUNNING"); //공정 진행상태 체크
+
+  //초기 레시피 로드
   useEffect(() => {
     fetch("http://localhost:9500/api/recipes")
       .then(res => res.json())
@@ -60,7 +62,7 @@ const ProcessRealTime: React.FC = () => {
       .catch(err => console.error("레시피 로드 실패:", err));
   }, []);
 
-  // 2. 레시피 선택 시 Simulation ID 조회
+  //레시피 선택 시 Simulation ID 조회
   useEffect(() => {
     if (!selectedRecipeId) return;
     
@@ -75,6 +77,12 @@ const ProcessRealTime: React.FC = () => {
       .then(sim => {
         console.log("조회된 시뮬레이션 ID:", sim.id);
         setSimulationId(sim.id);
+
+        if (sim.status === "FINISHED") {
+          setProcessStatus("FINISHED");
+        } else {
+          setProcessStatus("RUNNING");
+        }
       })
       .catch(err => {
         console.error("Simulation 조회 실패:", err);
@@ -83,7 +91,7 @@ const ProcessRealTime: React.FC = () => {
       });
   }, [selectedRecipeId]);
 
-  // 3. Simulation ID 결정 후 데이터 및 웹소켓 처리
+  //Simulation ID 결정 후 데이터 및 웹소켓 처리
   useEffect(() => {
     if (!simulationId) return;
 
@@ -91,23 +99,33 @@ const ProcessRealTime: React.FC = () => {
       try {
         console.log(`세션 초기화 시작 (ID: ${simulationId})`);
         
-        // 데이터 로드
+        //데이터 로드
         const response = await fetch(`http://localhost:9500/api/simulation/${simulationId}/logs`);
         if (!response.ok) throw new Error("로그 데이터 응답 에러");
         
         const logs = await response.json();
         console.log("초기 로그 수신 완료:", logs.length);
 
-        const formattedLogs = logs.map((log: any) => ({
-          time: new Date(log.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          temp: log.tempPh,
-          ph: log.phValue,
-          do: log.doValue,
-          progress: log.progressRate
-        }));
+        const formattedLogs = logs.map((log: any) => {
+          const rawDate = log.timeStamp || log.timestamp; 
+          
+          return {
+            time: rawDate 
+              ? new Date(rawDate).toLocaleTimeString('ko-KR', { 
+                  hour: '2-digit', 
+                  minute: '2-digit', 
+                  second: '2-digit' 
+                })
+              : "00:00:00", // 데이터가 없을 경우 기본값
+            temp: log.tempPh,
+            ph: log.phValue,
+            do: log.doValue,
+            progress: log.progressRate !== undefined ? log.progressRate : 100
+          };
+        });
         setRealTimeData(formattedLogs);
 
-        // 웹소켓 연결
+        //웹소켓 연결
         const handleIncomingData = (type: string, body: string) => {
           const value = parseFloat(body);
           const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -121,15 +139,27 @@ const ProcessRealTime: React.FC = () => {
           });
         };
 
+        //웹소켓 내용 구독
         const client = new Client({
           brokerURL: 'ws://localhost:9500/ws-cdms',
           webSocketFactory: () => new SockJS('http://localhost:9500/ws-cdms'),
           onConnect: () => {
-            console.log("웹소켓 연결 성공!");
             client.subscribe(`/topic/temperature/${simulationId}`, (msg) => handleIncomingData('temp', msg.body));
             client.subscribe(`/topic/ph/${simulationId}`, (msg) => handleIncomingData('ph', msg.body));
             client.subscribe(`/topic/do/${simulationId}`, (msg) => handleIncomingData('do', msg.body));
             client.subscribe(`/topic/progress/${simulationId}`, (msg) => handleIncomingData('progress', msg.body));
+
+            //완료 상태 구독
+            client.subscribe(`/topic/status/${simulationId}`, (msg) => {
+              console.log("상태 수신 원본:", msg.body);
+
+              const status = msg.body.replaceAll('"', '').trim();
+              console.log("파싱된 상태:", status);
+
+              if (status === "FINISHED") {
+                setProcessStatus("FINISHED");
+              }
+            });
           },
         });
 
@@ -140,7 +170,7 @@ const ProcessRealTime: React.FC = () => {
         console.error("세션 초기화 중 치명적 에러:", error);
       } finally {
         console.log("로딩 상태 해제");
-        setIsLoading(false); // 성공하든 실패하든 로딩은 꺼야 함
+        setIsLoading(false);
       }
     };
 
@@ -155,12 +185,14 @@ const ProcessRealTime: React.FC = () => {
   }, [simulationId]);
 
   // 최신 데이터 추출
-  // const latest = realTimeData[realTimeData.length - 1] || { temp: 0, ph: 0, do: 0 };
-  // 이 부분이 realTimeData가 채워지기 전에는 0으로 보임
   const latest = realTimeData.length > 0 
     ? realTimeData[realTimeData.length - 1] 
     : { temp: 0, ph: 0, do: 0, progress: 0 };
+  //FINISHED 후 progress를 100으로 유지
+  const displayProgress = processStatus === "FINISHED" ? 100 : (latest.progress || 0);
 
+
+  /* JSX 구간 */
   return (
     <MainLayout>
       {isLoading ? 
@@ -168,48 +200,115 @@ const ProcessRealTime: React.FC = () => {
     : 
       (
       <Container fluid className="px-0">
-        {/* 헤더 및 상태표시 생략 (기존과 동일) */}
-
-        {/* 요약 카드 영역 (실시간 연동) */}
+        {/* 요약 카드 영역 */}
         <Row className="g-4 mb-2">
-          <Col md={4}>
+          <Col md={3}>
             <MetricCard><Card.Body>
               <div className="text-muted small fw-bold"><FontAwesomeIcon icon={faThermometerHalf} className="me-1"/> TEMPERATURE</div>
               <h3 className="fw-bold mb-0 text-danger">{latest.temp?.toFixed(1)}°C</h3>
             </Card.Body></MetricCard>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <MetricCard><Card.Body>
               <div className="text-muted small fw-bold"><FontAwesomeIcon icon={faVial} className="me-1"/> pH LEVEL</div>
               <h3 className="fw-bold mb-0 text-success">{latest.ph?.toFixed(2)}</h3>
             </Card.Body></MetricCard>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <MetricCard><Card.Body>
               <div className="text-muted small fw-bold"><FontAwesomeIcon icon={faWind} className="me-1"/> DISSOLVED OXYGEN</div>
               <h3 className="fw-bold mb-0 text-primary">{latest.do?.toFixed(1)}%</h3>
             </Card.Body></MetricCard>
           </Col>
+          {/* ProgressBar */}
+          <Col md={3}>
+            <MetricCard>
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="text-muted small fw-bold">
+                    <FontAwesomeIcon icon={faSync} spin={processStatus === "RUNNING"} className="me-1"/> 
+                    TOTAL PROCESS PROGRESS
+                  </div>
+                  <span className="fw-bold text-primary">{displayProgress.toFixed(1)}%</span>
+                </div>
+                
+                <div style={{ height: '20px', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#e9ecef' }}>
+                  <div 
+                    style={{ 
+                      width: `${displayProgress}%`, 
+                      height: '100%', 
+                      backgroundColor: latest.progress >= 100 ? '#2ecc71' : '#3498db',
+                      transition: 'width 0.5s ease-in-out',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {displayProgress >= 5 && `${displayProgress.toFixed(0)}%`}
+                  </div>
+                </div>
+              </Card.Body>
+            </MetricCard>
+          </Col>
         </Row>
 
+        {/* 그래프 */}
         <Row className="g-4">
           <Col xl={8}>
             <MetricCard style={{ height: '520px' }}>
               <Card.Body>
                 <h5 className="fw-bold mb-4">Real-time Parameter Trend</h5>
                 <ResponsiveContainer width="100%" height="90%">
-                  <LineChart data={realTimeData}>
+                  <ComposedChart data={realTimeData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f1f1" />
                     <XAxis dataKey="time" tick={{ fontSize: 11 }} />
                     <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
                     <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                     <Tooltip />
                     <Legend verticalAlign="top" height={36} />
-                    {/* 세 개의 라인 표시 */}
-                    <Line yAxisId="left" name="Temp (°C)" type="monotone" dataKey="temp" stroke="#ff7675" strokeWidth={2} dot={false} isAnimationActive={false} />
-                    <Line yAxisId="left" name="pH" type="monotone" dataKey="ph" stroke="#55efc4" strokeWidth={2} dot={false} isAnimationActive={false} />
-                    <Line yAxisId="right" name="DO (%)" type="monotone" dataKey="do" stroke="#74b9ff" strokeWidth={2} dot={false} isAnimationActive={false} />
-                  </LineChart>
+
+                    {/* 온도 */}
+                    <Line 
+                      yAxisId="left" 
+                      name="Temp (°C)" 
+                      type="monotone" 
+                      dataKey="temp" 
+                      stroke="#ff7675" 
+                      strokeWidth={2} 
+                      dot={false} 
+                      isAnimationActive={false} 
+                    />
+
+                    {/* pH */}
+                    <Bar 
+                      yAxisId="left" 
+                      name="pH" 
+                      dataKey="ph" 
+                      barSize={20} 
+                      fill="#55efc4"
+                      isAnimationActive={false}
+                    >
+                      {/* pH 값에 따른 색상 변경*/}
+                      {realTimeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.ph > 7 ? '#00cec9' : '#55efc4'} />
+                      ))}
+                    </Bar>
+
+                    {/* DO */}
+                    <Line 
+                      yAxisId="right" 
+                      name="DO (%)" 
+                      type="monotone" 
+                      dataKey="do" 
+                      stroke="#74b9ff" 
+                      strokeWidth={2} 
+                      dot={false} 
+                      isAnimationActive={false} 
+                    />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </Card.Body>
             </MetricCard>
@@ -243,6 +342,24 @@ const ProcessRealTime: React.FC = () => {
             </MetricCard>
           </Col>
         </Row>
+
+        <div className="text-center mt-3">
+          {latest.progress >= 100 || processStatus === "FINISHED" ? (
+            <Badge 
+              bg="success" 
+              style={{
+                fontSize: "1.1rem",
+                padding: "10px 25px",
+                borderRadius: "20px",
+                boxShadow: "0 4px 15px rgba(40, 167, 69, 0.3)"
+              }}
+            >
+              COMPLETED
+            </Badge>
+          ) : (
+            <Badge bg="info" className="px-3 py-2">PROCESSING...</Badge>
+          )}
+        </div>
       </Container>
     )}
     </MainLayout>
