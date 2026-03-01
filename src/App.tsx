@@ -21,6 +21,7 @@ import DoData from './sub/DoData';
 import PhData from './sub/PhData';
 import ProcessRealTime from './components/process_progress/ProcessRealTime';
 import RecipeManagement from './components/process_recipe/RecipeManagement';
+import AuditLog from './components/auditLog/AuditLog';
 
 const App = () => {
   return (
@@ -35,6 +36,7 @@ const App = () => {
             <Route path="/dashboard" element={<MESDashboard/>} />
             <Route path="/recipe" element={<RecipeManagement />} />
             <Route path="/process" element={<ProcessRealTime/>} />
+            <Route path="/audit-log" element={<AuditLog/>} />
 
             <Route path="/sales" element={<ProtectedRoute><SalesManagement/></ProtectedRoute>}/>
             <Route path="/pmanagement" element={<ProtectedRoute><ProductionManagement/></ProtectedRoute>}/>
@@ -59,5 +61,4 @@ const App = () => {
     </>
   );
 };
-
 export default App;
