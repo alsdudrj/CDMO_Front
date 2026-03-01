@@ -68,7 +68,7 @@ export const DeviationProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
     };
 
-    const intervalId = setInterval(fetchDeviation, 5000);
+    const intervalId = setInterval(fetchDeviation, 60000);
 
     // Fetch immediately on mount
     fetchDeviation();
@@ -87,6 +87,7 @@ export const DeviationProvider: React.FC<{ children: ReactNode }> = ({ children 
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useDeviation = () => {
   const context = useContext(DeviationContext);
   if (context === undefined) {

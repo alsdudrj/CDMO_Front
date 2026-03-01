@@ -8,17 +8,35 @@ import BatchProgress from './BatchProgress';
 import DeviationChart from './DeviationChart';
 import SignatureTable from './SignatureTable';
 import SystemStatus from './SystemStatus';
+import { useDeviation } from '../../context/DeviationContext';
 
 import {
   summaryData,
   batchData,
-  deviationData,
   signatureData,
   alertData,
   statusData
 } from '../../data/mockData';
 
 const MESDashboard: React.FC = () => {
+  const { deviations } = useDeviation();
+
+  // Calculate deviation data dynamically for the chart
+  const openDeviations = deviations.filter(d => d.status === 'OPEN');
+
+  const criticalCount = openDeviations.filter(d => d.severity === 'CRITICAL').length;
+  const majorCount = openDeviations.filter(d => d.severity === 'MAJOR').length;
+  const minorCount = openDeviations.filter(d => d.severity === 'MINOR').length;
+
+  const dynamicDeviationData = [
+    { name: 'Critical', value: criticalCount, color: '#dc3545' },
+    { name: 'Major', value: majorCount, color: '#ffc107' },
+    { name: 'Minor', value: minorCount, color: '#0dcaf0' }
+  ];
+
+  // If there's no data yet, we can optionally use a default/empty state or show zeros.
+  // It will render zeros smoothly.
+
   return (
     <MainLayout>
       <Container fluid className="px-0">
@@ -37,7 +55,7 @@ const MESDashboard: React.FC = () => {
             <BatchProgress data={batchData} />
           </Col>
           <Col xl={4} lg={12}>
-            <DeviationChart data={deviationData} />
+            <DeviationChart data={dynamicDeviationData} />
           </Col>
         </Row>
 

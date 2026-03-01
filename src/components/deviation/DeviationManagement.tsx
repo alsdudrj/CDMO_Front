@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import MainLayout from '../layout/MainLayout';
 import { useDeviation, Deviation } from '../../context/DeviationContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -6,13 +6,35 @@ import {
   faPlus,
   faSearch,
   faRotateLeft,
-  faChevronDown,
   faMagic,
   faExclamationTriangle,
-  faTimes,
   faSpinner
 } from '@fortawesome/free-solid-svg-icons';
-import { Modal, Button, Badge } from 'react-bootstrap';
+import { Modal, Button } from 'react-bootstrap';
+
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; // Injected from environment or empty
+
+const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 5) => {
+  let retries = 0;
+  let delay = 1000;
+
+  while (retries < maxRetries) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      retries++;
+      if (retries >= maxRetries) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay *= 2; // 1s, 2s, 4s, 8s, 16s
+    }
+  }
+};
 
 const DeviationManagement: React.FC = () => {
   const { deviations } = useDeviation();
@@ -87,28 +109,48 @@ const DeviationManagement: React.FC = () => {
     setAiResponse('');
     setAiError('');
 
-    // Simulate AI Analysis
-    setTimeout(() => {
-        setAiResponse(`
-### AI Analysis Report for Deviation #${dev.id.substring(0, 8)}
+    const prompt = `당신은 제약/제조 산업의 수석 품질보증(QA) 전문가입니다. 다음 제조 공정 일탈(Deviation) 기록을 분석해주세요:
 
-**1. Potential Root Causes:**
-*   **Sensor Calibration Drift:** The ${dev.parameter} sensor may be experiencing drift, leading to inaccurate readings of ${dev.recordedValue}.
-*   **Process Parameter Fluctuation:** Unexpected variations in the upstream process steps could have caused a temporary spike in ${dev.parameter}.
-*   **Equipment Malfunction:** A potential malfunction in the control valve or heating/cooling element associated with the batch.
+- 배치 ID: ${dev.batchId}
+- 파라미터: ${dev.parameter}
+- 측정값: ${dev.recordedValue}
+- 기준값: ${dev.limitValue}
+- 심각도: ${dev.severity}
 
-**2. Quality Impact Assessment:**
-*   **Severity: ${dev.severity}** - This deviation is classified as ${dev.severity}, indicating a ${dev.severity === 'CRITICAL' ? 'significant' : 'moderate'} potential impact on product quality.
-*   The recorded value of ${dev.recordedValue} deviates from the limit of ${dev.limitValue}.
-*   Immediate review of the batch record is recommended to determine if the product is still within acceptable specifications.
+위 데이터를 바탕으로 다음 세 가지 항목을 체계적으로 분석해주세요:
+1. 잠재적 근본 원인 (Potential Root Causes) - 최소 2가지 제안
+2. 품질에 미치는 영향 평가 (Quality Impact Assessment)
+3. 권장 시정 및 예방 조치 (CAPA - Corrective and Preventive Actions)
 
-**3. Recommended CAPA (Corrective and Preventive Actions):**
-*   **Immediate:** Isolate the affected batch and perform a detailed quality check.
-*   **Corrective:** Recalibrate the ${dev.parameter} sensor and inspect the associated equipment.
-*   **Preventive:** Increase the frequency of sensor calibration and implement real-time monitoring alerts for ${dev.parameter} trends.
-        `);
-        setIsAiLoading(false);
-    }, 2000);
+전문적인 제조/품질 용어를 사용하여 가독성 좋은 한국어로 작성해주세요.`;
+
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        systemInstruction: {
+          parts: [{ text: "당신은 문제를 분석하고 실행 가능한 해결책을 제시하는 전문적인 제조 품질 관리 AI 조수입니다." }]
+        }
+      };
+
+      const result = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        setAiResponse(text);
+      } else {
+        throw new Error('응답을 파싱할 수 없습니다.');
+      }
+    } catch (error) {
+      setAiError('AI 분석을 불러오는 중 오류가 발생했습니다. 나중에 다시 시도해주세요.');
+      console.error(error);
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   const closeModal = () => {
