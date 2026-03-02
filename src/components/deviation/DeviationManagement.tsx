@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import MainLayout from '../layout/MainLayout';
-import { useDeviation, Deviation } from '../../context/DeviationContext';
+//import { useDeviation, Deviation } from '../../context/DeviationContext';
+import { useDeviation } from '../../context/DeviationContext';
+import type { Deviation } from '../../context/DeviationContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus,
@@ -12,7 +14,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Modal, Button } from 'react-bootstrap';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; // Injected from environment or empty
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+// Injected from environment or empty
 
 const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 5) => {
   let retries = 0;
@@ -31,7 +34,8 @@ const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 5)
         throw error;
       }
       await new Promise(resolve => setTimeout(resolve, delay));
-      delay *= 2; // 1s, 2s, 4s, 8s, 16s
+      delay *= 2;
+      // 1s, 2s, 4s, 8s, 16s
     }
   }
 };
@@ -46,8 +50,10 @@ const DeviationManagement: React.FC = () => {
   const filterStartY = useRef(0);
   const FILTER_MAX_HEIGHT = 280;
 
-  const currentFilterHeight = filterDragHeight !== null ? filterDragHeight : (isFilterCollapsed ? 0 : FILTER_MAX_HEIGHT);
-  const currentFilterOpacity = filterDragHeight !== null ? filterDragHeight / FILTER_MAX_HEIGHT : (isFilterCollapsed ? 0 : 1);
+  const currentFilterHeight = filterDragHeight !== null ?
+    filterDragHeight : (isFilterCollapsed ? 0 : FILTER_MAX_HEIGHT);
+  const currentFilterOpacity = filterDragHeight !== null ?
+    filterDragHeight / FILTER_MAX_HEIGHT : (isFilterCollapsed ? 0 : 1);
 
   // AI Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,7 +72,6 @@ const DeviationManagement: React.FC = () => {
   const handleFilterPointerMove = (e: React.PointerEvent) => {
     if (!filterIsDragging.current) return;
     const deltaY = e.clientY - filterStartY.current;
-
     if (!isFilterCollapsed) {
       // Dragging Up
       const newH = Math.min(FILTER_MAX_HEIGHT, Math.max(0, FILTER_MAX_HEIGHT + deltaY));
@@ -164,7 +169,8 @@ const DeviationManagement: React.FC = () => {
       {/* We will implement a global toast container in MainLayout or App, but for now we rely on the context to trigger them.
           The requirement mentions "Trigger a visible Toast notification".
           Ideally, this should be handled at a higher level (App.tsx) so it persists across navigation,
-          but if it's page-specific, we can add it here. However, alerts should be global.
+          but if it's page-specific, we can 
+          add it here. However, alerts should be global.
           We will handle Toast display in step 6.
       */}
 
@@ -315,12 +321,16 @@ const DeviationManagement: React.FC = () => {
                       </td>
                       <td className="px-4 text-muted small">{new Date(dev.createdAt).toLocaleString()}</td>
                       <td className="px-4 text-end">
-                        <button
+                        
+                        {/* AI Analysis 버튼만 주석 처리 */}
+                        {/* <button
                             className="btn btn-sm btn-outline-primary fw-bold me-2"
                             onClick={() => handleAIAnalysis(dev)}
                         >
                           <FontAwesomeIcon icon={faMagic} className="me-1" /> AI Analysis
                         </button>
+                        */}
+                        
                         <button className="btn btn-sm btn-light fw-bold text-muted">
                           Details
                         </button>

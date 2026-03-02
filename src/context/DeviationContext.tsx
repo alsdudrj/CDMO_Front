@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
+//import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 // Define the shape of the deviation data from the API
 interface DeviationData {
   batchId: string;
@@ -32,7 +32,8 @@ interface DeviationContextType {
 
 const DeviationContext = createContext<DeviationContextType | undefined>(undefined);
 
-export const DeviationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+//export const DeviationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const DeviationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [deviations, setDeviations] = useState<Deviation[]>([]);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
@@ -41,7 +42,7 @@ export const DeviationProvider: React.FC<{ children: ReactNode }> = ({ children 
   useEffect(() => {
     const fetchDeviation = async () => {
       try {
-        const response = await fetch('http://localhost:9500/api/deviations/simulateData');
+        const response = await fetch('http://localhost:9500/api/deviations/simulate');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
