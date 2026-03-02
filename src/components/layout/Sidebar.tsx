@@ -10,6 +10,7 @@ import {
   faWarehouse,
   faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
+import { useDeviation } from '../../context/DeviationContext';
 
 const SidebarContainer = styled.div`
   /* Inherits styles from .mes-sidebar in global.scss but we add internal layout here */
@@ -72,6 +73,7 @@ const Logo = styled.div`
 const Sidebar = () => {
   const location = useLocation();
   const path = location.pathname;
+  const { unreadCount } = useDeviation();
 
   return (
     <div className="mes-sidebar d-flex flex-column">
@@ -96,7 +98,7 @@ const Sidebar = () => {
           <NavLink to="/deviations" $active={path.startsWith('/deviations')}>
             <IconWrapper><FontAwesomeIcon icon={faExclamationTriangle} /></IconWrapper>
             Deviations
-            <Badge>3</Badge>
+            {unreadCount > 0 && <Badge>{unreadCount}</Badge>}
           </NavLink>
           <NavLink to="/signatures" $active={path.startsWith('/signatures')}>
             <IconWrapper><FontAwesomeIcon icon={faFileSignature} /></IconWrapper>
