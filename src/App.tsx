@@ -22,43 +22,48 @@ import PhData from './sub/PhData';
 import ProcessRealTime from './components/process_progress/ProcessRealTime';
 import RecipeManagement from './components/process_recipe/RecipeManagement';
 import AuditLog from './components/auditLog/AuditLog';
+import DeviationManagement from './components/deviation/DeviationManagement';
+import { DeviationProvider } from './context/DeviationContext';
+import GlobalToastContainer from './components/common/GlobalToastContainer';
 
 const App = () => {
   return (
-    <>
-    <BrowserRouter>
-        <Routes>
-            <Route path="/" element={<Navigate to="/login" replace/>}/>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/admin" element={<Admin/>}/>
+    <DeviationProvider>
+        <BrowserRouter>
+            <GlobalToastContainer />
+            <Routes>
+                <Route path="/" element={<Navigate to="/login" replace/>}/>
+                <Route path="/login" element={<Login/>}/>
+                <Route path="/admin" element={<Admin/>}/>
 
-            {/*포트폴리오 추가*/}
-            <Route path="/dashboard" element={<MESDashboard/>} />
-            <Route path="/recipe" element={<RecipeManagement />} />
-            <Route path="/process" element={<ProcessRealTime/>} />
-            <Route path="/audit-log" element={<AuditLog/>} />
+                {/*포트폴리오 추가*/}
+                <Route path="/dashboard" element={<MESDashboard/>} />
+                <Route path="/recipe" element={<RecipeManagement />} />
+                <Route path="/process" element={<ProcessRealTime/>} />
+                <Route path="/deviations" element={<DeviationManagement/>} />
+                <Route path="/audit-log" element={<AuditLog/>} />
 
-            <Route path="/sales" element={<ProtectedRoute><SalesManagement/></ProtectedRoute>}/>
-            <Route path="/pmanagement" element={<ProtectedRoute><ProductionManagement/></ProtectedRoute>}/>
-            <Route path="/pm" element={<ProtectedRoute><PurchaseMaterial/></ProtectedRoute>}/>
-            <Route path="/im" element={<ProtectedRoute><InventoryManagement/></ProtectedRoute>}/>
-            <Route path="/kpi" element={<ProtectedRoute><KpiManagement/></ProtectedRoute>}/>
-            <Route path="/standard" element={<ProtectedRoute><StandardManagement/></ProtectedRoute>}/>
-            <Route path="/system" element={<ProtectedRoute><SystemManagement/></ProtectedRoute>}/>
+                <Route path="/sales" element={<ProtectedRoute><SalesManagement/></ProtectedRoute>}/>
+                <Route path="/pmanagement" element={<ProtectedRoute><ProductionManagement/></ProtectedRoute>}/>
+                <Route path="/pm" element={<ProtectedRoute><PurchaseMaterial/></ProtectedRoute>}/>
+                <Route path="/im" element={<ProtectedRoute><InventoryManagement/></ProtectedRoute>}/>
+                <Route path="/kpi" element={<ProtectedRoute><KpiManagement/></ProtectedRoute>}/>
+                <Route path="/standard" element={<ProtectedRoute><StandardManagement/></ProtectedRoute>}/>
+                <Route path="/system" element={<ProtectedRoute><SystemManagement/></ProtectedRoute>}/>
 
-            <Route path="/forgot" element={<Forgot/>}/>
-            <Route path="/member" element={<Member/>}/>
-            <Route path="/reset" element={<Reset/>}/>
-            <Route path="/search" element={<SearchPage />} />
+                <Route path="/forgot" element={<Forgot/>}/>
+                <Route path="/member" element={<Member/>}/>
+                <Route path="/reset" element={<Reset/>}/>
+                <Route path="/search" element={<SearchPage />} />
 
-            {/*테스트 페이지*/}
-            <Route path="/test" element={<TestPage/>}/>
-            <Route path="/test2" element={<TempData/>}/>
-            <Route path="/test3" element={<DoData/>}/>
-            <Route path="/test4" element={<PhData/>}/>
-        </Routes>
-    </BrowserRouter>
-    </>
+                {/*테스트 페이지*/}
+                <Route path="/test" element={<TestPage/>}/>
+                <Route path="/test2" element={<TempData/>}/>
+                <Route path="/test3" element={<DoData/>}/>
+                <Route path="/test4" element={<PhData/>}/>
+            </Routes>
+        </BrowserRouter>
+    </DeviationProvider>
   );
 };
 export default App;
