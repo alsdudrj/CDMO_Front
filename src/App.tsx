@@ -25,6 +25,7 @@ import AuditLog from './components/auditLog/AuditLog';
 import DeviationManagement from './components/deviation/DeviationManagement';
 import { DeviationProvider } from './context/DeviationContext';
 import GlobalToastContainer from './components/common/GlobalToastContainer';
+import Esignature from './components/esignature/Esignature';
 
 const App = () => {
   return (
@@ -42,6 +43,8 @@ const App = () => {
                 <Route path="/process" element={<ProcessRealTime/>} />
                 <Route path="/deviations" element={<DeviationManagement/>} />
                 <Route path="/audit-log" element={<AuditLog/>} />
+                <Route path="/signatures" element={<Esignature/>} />
+
 
                 <Route path="/sales" element={<ProtectedRoute><SalesManagement/></ProtectedRoute>}/>
                 <Route path="/pmanagement" element={<ProtectedRoute><ProductionManagement/></ProtectedRoute>}/>
