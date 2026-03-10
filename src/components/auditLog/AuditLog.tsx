@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHistory, faEye, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { getAuditLogs } from '../../api';
 import type { AuditLogDto } from '../../api';
-import ReactJson from '@microlink/react-json-view';
 
 // --- 스타일 컴포넌트 정의 ---
 const LogCard = styled(Card)`
@@ -27,7 +26,7 @@ const AuditLogPage: React.FC = () => {
     const fetchLogs = async () => {
         try {
             const data = await getAuditLogs();
-            setLogs(data.reverse()); // 최신순 정렬
+            setLogs(data);
         } catch (error) {
             console.error("Failed to fetch logs", error);
         }

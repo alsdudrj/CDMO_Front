@@ -69,7 +69,8 @@ export const DeviationProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     };
 
-    const intervalId = setInterval(fetchDeviation, 60000);
+    //너무 자주 생겨서 5분으로 조정
+    const intervalId = setInterval(fetchDeviation, 300000);
 
     // Fetch immediately on mount
     fetchDeviation();
