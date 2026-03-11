@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import MainLayout from '../layout/MainLayout';
 //import { useDeviation, Deviation } from '../../context/DeviationContext';
+// 추가: 모달 상태 제어를 위해 Context에서 필요한 함수 가져오기
 import { useDeviation } from '../../context/DeviationContext';
 import type { Deviation } from '../../context/DeviationContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,8 +14,11 @@ import {
   faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import { Modal, Button } from 'react-bootstrap';
+// 추가: 모달 상태 제어를 위해 Context에서 필요한 함수 가져오기
+import SignatureModal from '../esignature/SignatureModal';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+
 // Injected from environment or empty
 
 const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 5) => {
@@ -41,7 +45,13 @@ const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 5)
 };
 
 const DeviationManagement: React.FC = () => {
-  const { deviations } = useDeviation();
+// 수정: Context에서 모달 제어 함수와 선택된 일탈 상태 변경 함수를 가져옵니다.  
+  const { 
+    deviations, 
+    selectedDeviation, //Context에서 가져옴
+    setSelectedDeviation, //Context에서 가져옴
+    setSignatureModalOpen 
+  } = useDeviation();
 
   // Filter Drag Logic
   const [isFilterCollapsed, setIsFilterCollapsed] = useState(false);
@@ -57,7 +67,6 @@ const DeviationManagement: React.FC = () => {
 
   // AI Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDeviation, setSelectedDeviation] = useState<Deviation | null>(null);
   const [aiResponse, setAiResponse] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
@@ -130,7 +139,7 @@ const DeviationManagement: React.FC = () => {
 전문적인 제조/품질 용어를 사용하여 가독성 좋은 한국어로 작성해주세요.`;
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
       const payload = {
         contents: [{ parts: [{ text: prompt }] }],
         systemInstruction: {
@@ -297,7 +306,9 @@ const DeviationManagement: React.FC = () => {
                 <tbody>
                   {deviations.map((dev) => (
                     <tr key={dev.id}>
-                      <td className="px-4 fw-bold text-secondary text-truncate" style={{maxWidth: '100px'}} title={dev.id}>#{dev.id.substring(0, 8)}...</td>
+                      <td className="px-4 fw-bold text-secondary text-truncate" style={{maxWidth: '100px'}} title={String(dev.id)}>
+                        #{String(dev.id).substring(0, 8)}...
+                        </td>
                       <td className="px-4 text-dark fw-medium">{dev.batchId}</td>
                       <td className="px-4 fw-semibold text-primary">{dev.parameter}</td>
                       <td className="px-4">
@@ -321,15 +332,26 @@ const DeviationManagement: React.FC = () => {
                       </td>
                       <td className="px-4 text-muted small">{new Date(dev.createdAt).toLocaleString()}</td>
                       <td className="px-4 text-end">
-                        
-                        {/* AI Analysis 버튼만 주석 처리 */}
-                        {/* <button
+                        {/* 추가: 일탈 상태가 OPEN일 때만 전자서명 버튼 노출 */}
+                        {dev.status === 'OPEN' && (
+                          <button
+                            className="btn btn-sm btn-primary fw-bold me-2"
+                            onClick={() => {
+                              setSelectedDeviation(dev); // 클릭한 일탈 데이터 저장
+                              setSignatureModalOpen(true); // 전자서명 모달 열기
+                            }}
+                          >
+                            전자서명 승인
+                          </button>
+                          )}
+                       
+                        {/* AI Analysis 버튼 */}
+                          <button
                             className="btn btn-sm btn-outline-primary fw-bold me-2"
                             onClick={() => handleAIAnalysis(dev)}
-                        >
+                            >
                           <FontAwesomeIcon icon={faMagic} className="me-1" /> AI Analysis
                         </button>
-                        */}
                         
                         <button className="btn btn-sm btn-light fw-bold text-muted">
                           Details
@@ -403,6 +425,8 @@ const DeviationManagement: React.FC = () => {
             </Button>
         </Modal.Footer>
       </Modal>
+      {/* 추가: 전자서명 연동 모달 컴포넌트 삽입 */}
+      <SignatureModal />      
     </MainLayout>
   );
 };

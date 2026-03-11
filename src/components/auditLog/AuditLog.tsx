@@ -27,7 +27,7 @@ const AuditLogPage: React.FC = () => {
     const fetchLogs = async () => {
         try {
             const data = await getAuditLogs();
-            setLogs(data.reverse()); // 최신순 정렬
+            setLogs(data);
         } catch (error) {
             console.error("Failed to fetch logs", error);
         }

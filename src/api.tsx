@@ -27,3 +27,6 @@ export const getAuditLogs = async (): Promise<AuditLogDto[]> => {
     const response = await apiClient.get('/audit-logs'); // 백엔드 컨트롤러 경로에 맞게 수정
     return response.data;
 };
+
+export const approveDeviation = (id: string, approvalData: any) => 
+    apiClient.post(`/deviations/${id}/approve`, approvalData);
