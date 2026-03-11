@@ -28,6 +28,11 @@ interface DeviationContextType {
   unreadCount: number;
   toasts: ToastNotification[];
   removeToast: (id: string) => void;
+  // 코어 연동을 위한 상태 추가
+  selectedDeviation: Deviation | null;
+  setSelectedDeviation: (dev: Deviation | null) => void;
+  isSignatureModalOpen: boolean;
+  setSignatureModalOpen: (isOpen: boolean) => void;  
 }
 
 const DeviationContext = createContext<DeviationContextType | undefined>(undefined);
@@ -36,8 +41,10 @@ const DeviationContext = createContext<DeviationContextType | undefined>(undefin
 export const DeviationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [deviations, setDeviations] = useState<Deviation[]>([]);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
-
+  const [selectedDeviation, setSelectedDeviation] = useState<Deviation | null>(null);
+  const [isSignatureModalOpen, setSignatureModalOpen] = useState(false);
   const unreadCount = deviations.filter(d => d.status === 'OPEN').length;
+
 
   useEffect(() => {
     const fetchDeviation = async () => {
@@ -50,7 +57,7 @@ export const DeviationProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         const newDeviation: Deviation = {
           ...data,
-          id: crypto.randomUUID(),
+          id: String((data as any).id), //타입 충돌 크래시 해결
           createdAt: new Date().toISOString(),
         };
 
@@ -82,7 +89,11 @@ export const DeviationProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   return (
-    <DeviationContext.Provider value={{ deviations, unreadCount, toasts, removeToast }}>
+    <DeviationContext.Provider value={{ 
+      deviations, unreadCount, toasts, removeToast,
+      selectedDeviation, setSelectedDeviation,
+      isSignatureModalOpen, setSignatureModalOpen
+      }}>
       {children}
     </DeviationContext.Provider>
   );
