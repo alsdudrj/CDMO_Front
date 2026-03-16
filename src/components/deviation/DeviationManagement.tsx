@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import MainLayout from '../layout/MainLayout';
 //import { useDeviation, Deviation } from '../../context/DeviationContext';
 // 추가: 모달 상태 제어를 위해 Context에서 필요한 함수 가져오기
@@ -16,6 +16,7 @@ import {
 import { Modal, Button } from 'react-bootstrap';
 // 추가: 모달 상태 제어를 위해 Context에서 필요한 함수 가져오기
 import SignatureModal from '../esignature/SignatureModal';
+import axios from 'axios';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
 
@@ -70,6 +71,22 @@ const DeviationManagement: React.FC = () => {
   const [aiResponse, setAiResponse] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
+
+  //데이터 저장을 위한 상태
+  const [deviationSearch, setDeviationSearch] = useState<Deviation[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  //검색 조건 상태
+  const [status, setStatus] = useState('');
+  const [severity, setSeverity] = useState('');
+  const [keyword,setKeyword] = useState("");
+  const [startDate,setStartDate] = useState("");
+  const [endDate,setEndDate] = useState("");
+
+  //페이징
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
 
   const handleFilterPointerDown = (e: React.PointerEvent) => {
     filterIsDragging.current = true;
@@ -172,6 +189,145 @@ const DeviationManagement: React.FC = () => {
     setSelectedDeviation(null);
   };
 
+  /* =============검색 관련============= */
+  //API 호출
+  const fetchDeviations = async (page = 0) => {
+    setLoading(true);
+
+    try {
+      //스프링 부트에서 만든 엔드포인트와 파라미터 매칭
+      const response = await axios.get('/api/deviations/search', {
+        params: {
+          page: page,
+          size: 10,
+          severity: severity || undefined,
+          status: status || undefined,
+          keyword: keyword || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined
+        }
+      });
+
+      //Page<DeviationDTO>의 content 배열을 상태에 저장
+      setDeviationSearch(response.data.content)
+      setTotalPages(response.data.totalPages)
+      setPage(response.data.number)
+    } catch (error) {
+      console.error("데이터 로드 중 오류 발생:", error);
+      alert("일탈 목록을 가져오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //페이지 진입시 검색 초기 실행
+  useEffect(() => {
+    fetchDeviations();
+  }, []);
+
+  //검색 함수
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault(); //폼 제출 방지
+    fetchDeviations(0); //검색 초기페이지 (1페이지)
+  };
+
+  //페이지 이동 함수
+  const goToPage = (pageNumber:number)=>{
+    fetchDeviations(pageNumber)
+  }
+
+  //페이지 번호 생성
+  const renderPagination = () => {
+
+    const pages = [];
+    const start = Math.max(0, page - 2);
+    const end = Math.min(totalPages - 1, page + 2);
+
+    //첫 페이지
+    if(start > 0){
+      pages.push(
+        <li key={0} className="page-item">
+          <button className="page-link" onClick={()=>goToPage(0)}>
+            1
+          </button>
+        </li>
+      )
+
+      if(start > 1){
+        pages.push(
+          <li key="start-ellipsis" className="page-item disabled">
+            <span className="page-link">...</span>
+          </li>
+        )
+      }
+    }
+
+    //현재 주변 페이지
+    for(let i = start; i <= end; i++){
+      pages.push(
+        <li key={i} className={`page-item ${i === page ? "active":""}`}>
+          <button className="page-link" onClick={()=>goToPage(i)}>
+            {i + 1}
+          </button>
+        </li>
+      )
+    }
+
+    //마지막 페이지
+    if(end < totalPages - 1){
+
+      if(end < totalPages - 2){
+        pages.push(
+          <li key="end-ellipsis" className="page-item disabled">
+            <span className="page-link">...</span>
+          </li>
+        )
+      }
+
+      pages.push(
+        <li key={totalPages-1} className="page-item">
+          <button
+            className="page-link"
+            onClick={()=>goToPage(totalPages-1)}
+          >
+            {totalPages}
+          </button>
+        </li>
+      )
+    }
+
+    return pages
+  }
+
+  //이전/다음 버튼
+  const goPrev = ()=>{
+    if(page > 0){
+      fetchDeviations(page - 1)
+    }
+  }
+  const goNext = ()=>{
+    if(page < totalPages - 1){
+      fetchDeviations(page + 1)
+    }
+  }
+
+  //검색조건 초기화
+  const handleReset = () => {
+
+    setSeverity("")
+    setStatus("")
+    setKeyword("")
+    setStartDate("")
+    setEndDate("")
+
+    //페이지 초기화
+    setPage(0)
+
+    //전체 데이터 다시 조회
+    fetchDeviations(0)
+  }
+  /* =================================== */
+
   return (
     <MainLayout>
       {/* Toast Notification Container */}
@@ -218,30 +374,43 @@ const DeviationManagement: React.FC = () => {
                     <div className="col-md-6">
                       <label className="form-label small fw-bold text-muted">DATE RANGE</label>
                       <div className="d-flex align-items-center gap-2">
-                        <input type="date" className="form-control form-control-sm" defaultValue="2026-02-20" />
+                        <input type="date" className="form-control form-control-sm" value={startDate} onChange={(e)=>setStartDate(e.target.value)} />
                         <span className="text-muted">~</span>
-                        <input type="date" className="form-control form-control-sm" defaultValue="2026-02-27" />
+                        <input type="date" className="form-control form-control-sm" value={endDate} onChange={(e)=>setEndDate(e.target.value)} />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label small fw-bold text-muted">KEYWORD SEARCH</label>
                       <div className="input-group input-group-sm">
                         <span className="input-group-text"><FontAwesomeIcon icon={faSearch} /></span>
-                        <input type="text" className="form-control" placeholder="Search by ID, Parameter, etc." />
+                        <input type="text" className="form-control" placeholder="Search by ID, Parameter, etc." value={keyword} onChange={(e)=>setKeyword(e.target.value)}/>
                       </div>
                     </div>
                   </div>
 
                   <div className="row g-3">
-                    <div className="col-md-4">
+                    {/* <div className="col-md-4">
                       <label className="form-label small fw-bold text-muted">BATCH</label>
                       <select className="form-select form-select-sm">
                         <option>All Batches...</option>
                         <option>Batch #50021</option>
                         <option>Batch #50022</option>
                       </select>
-                    </div>
+                    </div> */}
                     <div className="col-md-4">
+                      <label className="form-label small fw-bold text-muted">SEVERITY</label>
+                      <select 
+                        className="form-select form-select-sm"
+                        value={severity} 
+                        onChange={(e) => setSeverity(e.target.value)}
+                      >
+                        <option value="">All Severities...</option>
+                        <option value="CRITICAL">CRITICAL</option>
+                        <option value="MAJOR">MAJOR</option>
+                        <option value="MINOR">MINOR</option>
+                      </select>
+                    </div>
+                    {/* <div className="col-md-4">
                       <label className="form-label small fw-bold text-muted">PROCESS</label>
                       <select className="form-select form-select-sm">
                         <option>All Processes...</option>
@@ -250,24 +419,27 @@ const DeviationManagement: React.FC = () => {
                         <option>Filling</option>
                         <option>Packaging</option>
                       </select>
-                    </div>
+                    </div> */}
                     <div className="col-md-4">
                       <label className="form-label small fw-bold text-muted">STATUS</label>
-                      <select className="form-select form-select-sm">
-                        <option>All Statuses...</option>
-                        <option>Initial Report</option>
-                        <option>Under Investigation</option>
-                        <option>Pending QA Review</option>
-                        <option>Closed</option>
+                      <select 
+                        className="form-select form-select-sm"
+                        value={status} 
+                        onChange={(e) => setStatus(e.target.value)}
+                      >
+                        <option value="">All Statuses...</option>
+                        <option value="OPEN">OPEN</option>
+                        <option value="INVESTIGATING">INVESTIGATING</option>
+                        <option value="CLOSED">CLOSED</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="d-flex justify-content-end gap-2 pt-2 mt-auto border-top border-dashed">
-                    <button className="btn btn-outline-secondary btn-sm fw-bold">
+                    <button className="btn btn-outline-secondary btn-sm fw-bold" onClick={handleReset}>
                       <FontAwesomeIcon icon={faRotateLeft} className="me-1" /> Reset
                     </button>
-                    <button className="btn btn-primary btn-sm fw-bold">
+                    <button className="btn btn-primary btn-sm fw-bold" onClick={handleSearch}>
                       <FontAwesomeIcon icon={faSearch} className="me-1" /> Search
                     </button>
                   </div>
@@ -304,7 +476,14 @@ const DeviationManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {deviations.map((dev) => (
+                  {loading && (
+                    <tr>
+                    <td colSpan={8} className="text-center">
+                    Loading...
+                    </td>
+                    </tr>
+                  )}
+                  {deviationSearch.map((dev) => (
                     <tr key={dev.id}>
                       <td className="px-4 fw-bold text-secondary text-truncate" style={{maxWidth: '100px'}} title={String(dev.id)}>
                         #{String(dev.id).substring(0, 8)}...
@@ -369,6 +548,28 @@ const DeviationManagement: React.FC = () => {
                   )}
                 </tbody>
               </table>
+              {/*페이징 버튼*/}
+              <div className="d-flex justify-content-center mt-3">
+                <nav>
+                  <ul className="pagination">
+
+                    <li className={`page-item ${page === 0 ? "disabled":""}`}>
+                      <button className="page-link" onClick={goPrev}>
+                        Previous
+                      </button>
+                    </li>
+
+                    {renderPagination()}
+
+                    <li className={`page-item ${page === totalPages-1 ? "disabled":""}`}>
+                      <button className="page-link" onClick={goNext}>
+                        Next
+                      </button>
+                    </li>
+
+                  </ul>
+                </nav>
+              </div>
             </div>
           </div>
       </div>
