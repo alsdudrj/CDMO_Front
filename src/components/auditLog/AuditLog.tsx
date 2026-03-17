@@ -19,16 +19,45 @@ const AuditLogPage: React.FC = () => {
     const [logs, setLogs] = useState<AuditLogDto[]>([]);
     const [selectedLog, setSelectedLog] = useState<AuditLogDto | null>(null);
 
+    //검색 상태
+    const [keyword, setKeyword] = useState("");
+    const [action, setAction] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+
+    //로딩 상태
+    const [loading, setLoading] = useState(false);
+
+    //페이징 상태
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+
     useEffect(() => {
         fetchLogs();
     }, []);
 
-    const fetchLogs = async () => {
+    //API 호출
+    const fetchLogs = async (pageNumber: number = page) => {
+        setLoading(true);
+
         try {
-            const data = await getAuditLogs();
-            setLogs(data);
+            const response = await getAuditLogs({
+                keyword: keyword || undefined,
+                action: action || undefined,
+                startDate: startDate || undefined,
+                endDate: endDate || undefined,
+                page: pageNumber,
+                size: 10
+            });
+
+            setLogs(response.content);
+            setTotalPages(response.totalPages);
+            setPage(response.number);
+
         } catch (error) {
             console.error("Failed to fetch logs", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -42,13 +71,14 @@ const AuditLogPage: React.FC = () => {
         }
     };
 
-    // 액션에 따른 배지 스타일
+    //액션에 따른 배지 스타일
     const getActionBadge = (action: string) => {
         switch (action) {
             case 'CREATE': return <Badge bg="success">CREATE</Badge>;
             case 'UPDATE': return <Badge bg="primary">UPDATE</Badge>;
             case 'DELETE': return <Badge bg="danger">DELETE</Badge>;
-            case 'PROCESS': return <Badge bg="info">PROCESS</Badge>;
+            case 'SIGNATURE_APPROVED': return <Badge bg="warning">SIGNATURE</Badge>;
+            case 'DEVIATION_APPROVED': return <Badge bg="info">DEVIATION</Badge>;
             default: return <Badge bg="secondary">{action}</Badge>;
         }
     };
@@ -126,6 +156,72 @@ const AuditLogPage: React.FC = () => {
         return diffs.length > 0 ? diffs : <div>변경된 내용 없음</div>;
     };
 
+    /* ================검색/페이징 관련================== */
+    //검색
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        fetchLogs();
+    };
+
+    const handleReset = () => {
+        setKeyword("");
+        setAction("");
+        setStartDate("");
+        setEndDate("");
+        fetchLogs();
+    };
+
+    //페이지 번호
+    const renderPagination = () => {
+
+        const pages = [];
+
+        const start = Math.max(0, page - 2);
+        const end = Math.min(totalPages - 1, page + 2);
+
+        for(let i = start; i <= end; i++){
+            pages.push(
+                <li key={i} className={`page-item ${i === page ? "active" : ""}`}>
+                    <button
+                        className="page-link"
+                        onClick={() => goToPage(i)}
+                    >
+                        {i + 1}
+                    </button>
+                </li>
+            );
+        }
+
+        return pages;
+    }
+
+    //페이지 이동
+    const goToPage = (pageNumber:number) => {
+        fetchLogs(pageNumber);
+    }
+    //이전 버튼
+    const goPrev = () => {
+        if(page > 0){
+            fetchLogs(page - 1);
+        }
+    }
+    //다음 버튼
+    const goNext = () => {
+        if(page < totalPages - 1){
+            fetchLogs(page + 1);
+        }
+    }
+    //첫 페이지
+    const goFirst = () => {
+        fetchLogs(0);
+    }
+
+    //마지막 페이지
+    const goLast = () => {
+        fetchLogs(totalPages - 1);
+    }
+    /* =================================================== */
+
     return (
         <MainLayout>
             <Container fluid className="px-0">
@@ -138,19 +234,103 @@ const AuditLogPage: React.FC = () => {
                     </Col>
                 </Row>
 
+                {/* 검색 */}
+                <Row className="mb-3">
+                    <Col>
+                        <Card className="p-3 shadow-sm border-0">
+                            <Row className="g-3 align-items-end">
+
+                                {/* 날짜 */}
+                                <Col md={4}>
+                                    <label className="form-label small fw-bold text-muted">DATE RANGE</label>
+                                    <div className="d-flex gap-2">
+                                        <input
+                                            type="date"
+                                            className="form-control form-control-sm"
+                                            value={startDate}
+                                            onChange={(e)=>setStartDate(e.target.value)}
+                                        />
+                                        <span>~</span>
+                                        <input
+                                            type="date"
+                                            className="form-control form-control-sm"
+                                            value={endDate}
+                                            onChange={(e)=>setEndDate(e.target.value)}
+                                        />
+                                    </div>
+                                </Col>
+
+                                {/* 키워드 */}
+                                <Col md={4}>
+                                    <label className="form-label small fw-bold text-muted">KEYWORD</label>
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-sm"
+                                        placeholder="username, entity..."
+                                        value={keyword}
+                                        onChange={(e)=>setKeyword(e.target.value)}
+                                    />
+                                </Col>
+
+                                {/* Action */}
+                                <Col md={2}>
+                                    <label className="form-label small fw-bold text-muted">ACTION</label>
+                                    <select
+                                        className="form-select form-select-sm"
+                                        value={action}
+                                        onChange={(e)=>setAction(e.target.value)}
+                                    >
+                                        <option value="">All</option>
+                                        <option value="CREATE">CREATE</option>
+                                        <option value="UPDATE">UPDATE</option>
+                                        <option value="DELETE">DELETE</option>
+                                        <option value="SIGNATURE_APPROVED">SIGNATURE_APPROVED</option>
+                                        <option value="DEVIATION_APPROVED">DEVIATION_APPROVED</option>
+                                    </select>
+                                </Col>
+
+                                {/* 버튼 */}
+                                <Col md={2} className="d-flex gap-2">
+                                    <Button
+                                        variant="outline-secondary"
+                                        size="sm"
+                                        onClick={handleReset}
+                                    >
+                                        Reset
+                                    </Button>
+
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={handleSearch}
+                                    >
+                                        Search
+                                    </Button>
+                                </Col>
+                            </Row>
+                        </Card>
+                    </Col>
+                </Row>
+
+                {/* 테이블 */}
                 <Row>
                     <Col>
                         <LogCard>
                             <Card.Body className="p-0">
-                                <Table hover responsive className="mb-0">
+                                <Table 
+                                hover 
+                                responsive 
+                                className="mb-0"
+                                style={{ tableLayout: "fixed", width: "100%"}}
+                                >
                                     <thead className="table-light">
                                         <tr>
-                                            <th className="px-4 py-3">일시</th>
-                                            <th className="px-4 py-3">작업자</th>
-                                            <th className="px-4 py-3">엔티티</th>
-                                            <th className="px-4 py-3">ID</th>
-                                            <th className="px-4 py-3">액션</th>
-                                            <th className="px-4 py-3 text-center">상세</th>
+                                            <th style={{width:"15%"}} className="px-4 py-3">일시</th>
+                                            <th style={{width:"20%"}} className="px-4 py-3">작업자</th>
+                                            <th style={{width:"30%"}} className="px-4 py-3">엔티티</th>
+                                            <th style={{width:"10%"}} className="px-4 py-3">ID</th>
+                                            <th style={{width:"10%"}} className="px-4 py-3">액션</th>
+                                            <th style={{width:"5%"}} className="px-4 py-3 text-center">상세</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
@@ -184,6 +364,40 @@ const AuditLogPage: React.FC = () => {
                                         ))}
                                     </tbody>
                                 </Table>
+
+                                {/* 페이징 번호 */}
+                                <div className="d-flex justify-content-center mt-3 mb-3">
+                                    <nav>
+                                        <ul className="pagination">
+                                            <li className={`page-item ${page === 0 ? "disabled" : ""}`}>
+                                                <button className="page-link" onClick={goFirst}>
+                                                    First
+                                                </button>
+                                            </li>
+
+                                            <li className={`page-item ${page === 0 ? "disabled" : ""}`}>
+                                                <button className="page-link" onClick={goPrev}>
+                                                    Previous
+                                                </button>
+                                            </li>
+
+                                            {renderPagination()}
+
+                                            <li className={`page-item ${page === totalPages - 1 ? "disabled" : ""}`}>
+                                                <button className="page-link" onClick={goNext}>
+                                                    Next
+                                                </button>
+                                            </li>
+
+                                            <li className={`page-item ${page === totalPages - 1 ? "disabled" : ""}`}>
+                                                <button className="page-link" onClick={goLast}>
+                                                    Last
+                                                </button>
+                                            </li>
+
+                                        </ul>
+                                    </nav>
+                                </div>
                             </Card.Body>
                         </LogCard>
                     </Col>

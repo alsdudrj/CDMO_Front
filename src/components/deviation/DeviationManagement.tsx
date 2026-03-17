@@ -310,6 +310,15 @@ const DeviationManagement: React.FC = () => {
       fetchDeviations(page + 1)
     }
   }
+    //첫 페이지
+    const goFirst = () => {
+        fetchDeviations(0);
+    }
+
+    //마지막 페이지
+    const goLast = () => {
+        fetchDeviations(totalPages - 1);
+    }
 
   //검색조건 초기화
   const handleReset = () => {
@@ -538,7 +547,7 @@ const DeviationManagement: React.FC = () => {
                       </td>
                     </tr>
                   ))}
-                  {deviations.length === 0 && (
+                  {deviationSearch.length === 0 && (
                       <tr>
                           <td colSpan={8} className="text-center py-5 text-muted">
                               <FontAwesomeIcon icon={faSpinner} spin className="me-2"/>
@@ -553,6 +562,12 @@ const DeviationManagement: React.FC = () => {
                 <nav>
                   <ul className="pagination">
 
+                    <li className={`page-item ${page === 0 ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={goFirst}>
+                            First
+                        </button>
+                    </li>
+
                     <li className={`page-item ${page === 0 ? "disabled":""}`}>
                       <button className="page-link" onClick={goPrev}>
                         Previous
@@ -565,6 +580,12 @@ const DeviationManagement: React.FC = () => {
                       <button className="page-link" onClick={goNext}>
                         Next
                       </button>
+                    </li>
+
+                    <li className={`page-item ${page === totalPages - 1 ? "disabled" : ""}`}>
+                        <button className="page-link" onClick={goLast}>
+                            Last
+                        </button>
                     </li>
 
                   </ul>

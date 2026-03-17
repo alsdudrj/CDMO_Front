@@ -23,10 +23,32 @@ export interface AuditLogDto {
     createdAt: string;
 }
 
-export const getAuditLogs = async (): Promise<AuditLogDto[]> => {
-    const response = await apiClient.get('/audit-logs'); // 백엔드 컨트롤러 경로에 맞게 수정
+export interface AuditLogSearchParams {
+    keyword?: string
+    action?: string
+    startDate?: string
+    endDate?: string
+    page?: number
+    size?: number
+}
+
+export const getAuditLogs = async (
+    params?: AuditLogSearchParams
+): Promise<PageResponse<AuditLogDto>> => {
+
+    const response = await apiClient.get('/audit-logs', {
+        params
+    });
+
     return response.data;
 };
+
+export interface PageResponse<T> {
+    content: T[]
+    totalPages: number
+    totalElements: number
+    number: number
+}
 
 export const approveDeviation = (id: string, approvalData: any) => 
     apiClient.post(`/deviations/${id}/approve`, approvalData);
